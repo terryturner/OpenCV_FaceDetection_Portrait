@@ -2,6 +2,8 @@ package com.goldtek.demo.logistics.face;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -10,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.goldtek.demo.logistics.face.dialog.FancyAlert;
 import com.goldtek.demo.logistics.face.dialog.ProfileDialogFragment;
 import com.goldtek.demo.logistics.face.dialog.ServerDialogFragment;
 
@@ -24,6 +27,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     public static final String PROFILE_CREATE = "profile_create_dialog";
     public static final String SETTING_SERVER = "config_server_dialog";
     public static final int REQUEST_PROFILE_CREATE = 0X110;
+    public static final int REQUEST_IDENTIFY = 0X111;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -61,6 +65,22 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                     //startActivity(new Intent(getContext(), FaceTrackerActivity.class));
                 }
                 break;
+            case REQUEST_IDENTIFY:
+                if (resultCode == Activity.RESULT_OK) {
+                    new FancyAlert.Builder()
+                        .setIconResource(R.drawable.tick_green)
+                        .setTitle("Validate")
+                        .setMessage("Pass")
+                        .setClickMessage("OK")
+                        .show(getActivity());
+                } else {
+                    new FancyAlert.Builder()
+                        .setIconResource(R.drawable.fail_red)
+                        .setTitle("Validate")
+                        .setMessage("Fail")
+                        .setClickMessage("OK").show(getActivity());
+                }
+                break;
         }
     }
 
@@ -71,6 +91,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                 showDialog(PROFILE_CREATE);
                 break;
             case R.id.Identify:
+                startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);
                 break;
             case R.id.SettingServer:
                 showDialog(SETTING_SERVER);

@@ -10,11 +10,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.WindowManager;
-
-import com.goldtek.demo.logistics.face.dialog.FancyAlert;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -39,9 +35,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 
-public class IdentifyActivity extends Activity implements CvCameraViewListener2 {
+public class RegisterActivity extends Activity implements CvCameraViewListener2 {
 
-    private static final String    TAG                 = "Identify";
+    private static final String    TAG                 = "Register";
     private static final Scalar    FACE_RECT_COLOR     = new Scalar(0, 255, 0, 255);
     public static final int        JAVA_DETECTOR       = 0;
     public static final int        NATIVE_DETECTOR     = 1;
@@ -66,15 +62,15 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
     private Bitmap mCacheBitmap;
 
     private static class MainHandler extends Handler {
-        private final WeakReference<IdentifyActivity> mActivity;
+        private final WeakReference<RegisterActivity> mActivity;
 
-        public MainHandler(IdentifyActivity activity) {
+        public MainHandler(RegisterActivity activity) {
             mActivity = new WeakReference<>(activity);
         }
 
         @Override
         public void handleMessage(Message msg) {
-            IdentifyActivity activity = mActivity.get();
+            RegisterActivity activity = mActivity.get();
             if (activity != null) {
                 activity.onIdentify();
             }
@@ -133,7 +129,7 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         }
     };
 
-    public IdentifyActivity() {
+    public RegisterActivity() {
         mDetectorName = new String[2];
         mDetectorName[JAVA_DETECTOR] = "Java";
         mDetectorName[NATIVE_DETECTOR] = "Native (tracking)";
@@ -154,7 +150,7 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
             setContentView(R.layout.backcam_identify);
         }
         else
-            setContentView(R.layout.frontcam_identify);
+            setContentView(R.layout.frontcam_register);
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(org.opencv.samples.facedetect.R.id.fd_activity_surface_view);
         mOpenCvCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);
@@ -211,7 +207,7 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         tempMat = mRgba.t();
         Core.flip(tempMat, mRgba, mCameraFront ? -1 : 1);
         tempMat.release();
-
+/*
         if (mProtocol != null && !mProtocol.isProcessing()) {
             mGray = inputFrame.gray();
 
@@ -250,10 +246,11 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
                 mProtocol.start(mCacheBitmap);
             }
         }
+        */
+
         tempMat = mRgba.t();
         Core.flip(tempMat, mRgba, mCameraFront ? 1 : -1);
         tempMat.release();
-
 
 
         return mRgba;

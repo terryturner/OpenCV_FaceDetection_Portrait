@@ -11,6 +11,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 
 import com.goldtek.demo.logistics.face.dialog.FancyAlert;
 import com.goldtek.demo.logistics.face.dialog.ProfileDialogFragment;
@@ -88,7 +89,8 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.Register:
-                showDialog(PROFILE_CREATE);
+                //showDialog(PROFILE_CREATE);
+                startActivity(new Intent(getContext(), RegisterActivity.class));
                 break;
             case R.id.Identify:
                 startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);
@@ -117,7 +119,10 @@ public class MainFragment extends Fragment implements View.OnClickListener {
             case SETTING_SERVER:
                 newFragment = new ServerDialogFragment();
         }
-        if (newFragment != null) newFragment.show(getFragmentManager(), tag);
+
+        if (newFragment != null) {
+            newFragment.show(getFragmentManager(), tag);
+        }
     }
 
     public static MainFragment newInstance(String argument)

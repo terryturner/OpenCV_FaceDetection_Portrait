@@ -495,14 +495,18 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
         int a = (mMaxWidth != MAX_UNSPECIFIED && mMaxWidth < surfaceWidth)? mMaxWidth : surfaceWidth;
         int b = (mMaxHeight != MAX_UNSPECIFIED && mMaxHeight < surfaceHeight)? mMaxHeight : surfaceHeight;
 
-        maxAllowedWidth = Math.max(a, b);
-        maxAllowedHeight = Math.min(a, b);
-        //Log.i("terry", "dbg max " + maxAllowedWidth + " " + maxAllowedHeight);
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            maxAllowedWidth = Math.min(a, b);
+            maxAllowedHeight = Math.max(a, b);
+        } else {
+            maxAllowedWidth = Math.max(a, b);
+            maxAllowedHeight = Math.min(a, b);
+        }
 
         for (Object size : supportedSizes) {
             int width = accessor.getWidth(size);
             int height = accessor.getHeight(size);
-            //Log.i("terry", "dbg calc " + width + " " + height);
+            Log.i("terry", "dbg calc " + width + " " + height);
 
             if (width <= maxAllowedWidth && height <= maxAllowedHeight) {
                 if (width >= calcWidth && height >= calcHeight) {

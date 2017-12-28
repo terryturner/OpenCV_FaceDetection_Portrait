@@ -1,5 +1,6 @@
 package com.goldtek.demo.logistics.face;
 
+import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -18,12 +19,13 @@ public class DummyProtocol {
 
     }
 
-    public void start() {
+    public void start(final Bitmap bitmap) {
         result++;
         mThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
+                    Utils.saveTempBitmap(bitmap);
                     Thread.sleep(3000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();

@@ -11,6 +11,7 @@ import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.WindowManager;
+import android.widget.ImageView;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -48,7 +49,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
     private CascadeClassifier      mJavaDetector;
     private DetectionBasedTracker mNativeDetector;
 
-    private int                    mDetectorType       = JAVA_DETECTOR;
+    private int                    mDetectorType       = NATIVE_DETECTOR;
     private String[]               mDetectorName;
     private boolean                mCameraFront        = true;
 
@@ -56,6 +57,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
     private int                    mAbsoluteFaceSize   = 0;
 
     private CameraBridgeViewBase   mOpenCvCameraView;
+    private RegisterBox            mRegisterBox;
 
     private MainHandler mHandler = new MainHandler(this);
     private DummyProtocol mProtocol = new DummyProtocol(mHandler);;
@@ -147,7 +149,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         Log.i(TAG, getDeviceName());
         if (getDeviceName().contains("fc11501")) {
             mCameraFront = false;
-            setContentView(R.layout.backcam_identify);
+            setContentView(R.layout.backcam_register);
         }
         else
             setContentView(R.layout.frontcam_register);
@@ -155,6 +157,8 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(org.opencv.samples.facedetect.R.id.fd_activity_surface_view);
         mOpenCvCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
+
+        mRegisterBox = findViewById(R.id.overlay_surface_view);
     }
 
     @Override
@@ -207,7 +211,8 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         tempMat = mRgba.t();
         Core.flip(tempMat, mRgba, mCameraFront ? -1 : 1);
         tempMat.release();
-/*
+
+
         if (mProtocol != null && !mProtocol.isProcessing()) {
             mGray = inputFrame.gray();
 
@@ -225,33 +230,48 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
             Core.flip(tempMat, mGray, mCameraFront ? -1 : 1);
             tempMat.release();
 
-            if (mDetectorType == JAVA_DETECTOR) {
-                if (mJavaDetector != null) mJavaDetector.detectMultiScale(mGray, faces, 1.1, 2, 2, // TODO: objdetect.CV_HAAR_SCALE_IMAGE
-                        new Size(mAbsoluteFaceSize, mAbsoluteFaceSize), new Size());
-            } else if (mDetectorType == NATIVE_DETECTOR) {
-                if (mNativeDetector != null) mNativeDetector.detect(mGray, faces);
-            } else {
-                Log.e(TAG, "Detection method is not selected!");
-            }
-            mGray.release();
-
-            Rect[] facesArray = faces.toArray();
-            for (Rect rect: facesArray)
-                Imgproc.rectangle(mRgba, rect.tl(), rect.br(), FACE_RECT_COLOR, 3);
-
-            if (facesArray.length > 0) isExistFace = true;
-
-            if (mProtocol != null && !mProtocol.isProcessing() && isExistFace) {
-                Utils.matToBitmap(mRgba, mCacheBitmap);
+            /*
+            if (mProtocol != null && !mProtocol.isProcessing()) {
+                if (mCacheBitmap != null) mCacheBitmap.recycle();
+                mCacheBitmap = Bitmap.createBitmap(mGray.cols(), mGray.rows(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(mGray, mCacheBitmap);
                 mProtocol.start(mCacheBitmap);
             }
+            */
+            int cx = (int) (mGray.cols() * mRegisterBox.getCenterRatioX());
+            int cy = (int) (mGray.rows() * mRegisterBox.getCenterRatioY());
+            int dx = (int) (mGray.cols() * mRegisterBox.getDistanceRatioX());
+            int dy = (int) (mGray.rows() * mRegisterBox.getDistanceRatioY());
+
+            tempMat = mGray.submat(cy - dy, cy + dy, cx - dx, cx + dx);
+            if (mNativeDetector != null) mNativeDetector.detect(tempMat, faces);
+            mGray.release();
+            tempMat.release();
+
+
+            Rect[] facesArray = faces.toArray();
+            if (facesArray.length > 0) {
+                isExistFace = true;
+                tempMat = mRgba.clone();
+            }
+            for (Rect rect: facesArray) {
+                rect.x += (cy - dy);
+                rect.y += (cx - dx);
+                Imgproc.rectangle(mRgba, rect.tl(), rect.br(), FACE_RECT_COLOR, 3);
+            }
+
+
+            if (mProtocol != null && !mProtocol.isProcessing() && isExistFace) {
+                Core.flip(tempMat, tempMat, 1);
+                Utils.matToBitmap(tempMat, mCacheBitmap);
+                mProtocol.start(mCacheBitmap);
+            }
+            if (facesArray.length > 0) tempMat.release();
         }
-        */
 
         tempMat = mRgba.t();
         Core.flip(tempMat, mRgba, mCameraFront ? 1 : -1);
         tempMat.release();
-
 
         return mRgba;
     }
@@ -276,12 +296,47 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
     }
 
     private void onIdentify() {
-        if (mProtocol != null && mProtocol.get() >= 3) {
+        if (mProtocol != null && mProtocol.get() >= 10) {
+
             Intent returnIntent = new Intent();
             setResult(Activity.RESULT_CANCELED, returnIntent);
             finish();
         } else if (mProtocol == null) {
             finish();
+        } else {
+            ((ImageView)findViewById(R.id.registerPhoto)).setImageBitmap(mCacheBitmap);
+            switch (mProtocol.get()) {
+                case 1:
+                    ((ImageView)findViewById(R.id.registerCount)).setImageResource(R.drawable.one);
+                    break;
+                case 2:
+                    ((ImageView)findViewById(R.id.registerCount)).setImageResource(R.drawable.two);
+                    break;
+                case 3:
+                    ((ImageView)findViewById(R.id.registerCount)).setImageResource(R.drawable.three);
+                    break;
+                case 4:
+                    ((ImageView)findViewById(R.id.registerCount)).setImageResource(R.drawable.four);
+                    break;
+                case 5:
+                    ((ImageView)findViewById(R.id.registerCount)).setImageResource(R.drawable.five);
+                    break;
+                case 6:
+                    ((ImageView)findViewById(R.id.registerCount)).setImageResource(R.drawable.six);
+                    break;
+                case 7:
+                    ((ImageView)findViewById(R.id.registerCount)).setImageResource(R.drawable.seven);
+                    break;
+                case 8:
+                    ((ImageView)findViewById(R.id.registerCount)).setImageResource(R.drawable.eight);
+                    break;
+                case 9:
+                    ((ImageView)findViewById(R.id.registerCount)).setImageResource(R.drawable.nine);
+                    break;
+                case 10:
+                    ((ImageView)findViewById(R.id.registerCount)).setImageResource(R.drawable.ten);
+                    break;
+            }
         }
     }
 

@@ -1,0 +1,13 @@
+<resources>
+    <declare-styleable name="RegisterBox">
+        <attr name="showText" format="boolean" />
+        <attr name="labelPosition" format="enum">
+            <enum name="left" value="0"/>
+            <enum name="right" value="1"/>
+        </attr>
+        <attr name="CenterRatioX" format="float" />
+        <attr name="CenterRatioY" format="float" />
+        <attr name="DistanceRatioX" format="float" />
+        <attr name="DistanceRatioY" format="float" />
+    </declare-styleable>
+</resources>

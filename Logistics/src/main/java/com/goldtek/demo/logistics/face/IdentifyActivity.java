@@ -153,8 +153,9 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
             mCameraFront = false;
             setContentView(R.layout.backcam_identify);
         }
-        else
+        else { // TODO: finish identify process due to design only on fc11501
             setContentView(R.layout.frontcam_identify);
+        }
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(org.opencv.samples.facedetect.R.id.fd_activity_surface_view);
         mOpenCvCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);

@@ -12,6 +12,7 @@ import android.util.Log;
 public class DummyProtocol {
     private final Handler mHandler;
     private Thread mThread;
+    private int limit = 10;
     private int result = 0;
 
     public DummyProtocol(Handler h) {
@@ -25,7 +26,7 @@ public class DummyProtocol {
             @Override
             public void run() {
                 try {
-                    Utils.saveTempBitmap(bitmap);
+                    //Utils.saveTempBitmap(bitmap);
                     Thread.sleep(3000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -47,5 +48,9 @@ public class DummyProtocol {
 
     public int get() {
         return result;
+    }
+
+    public boolean complete() {
+        return result >= limit;
     }
 }

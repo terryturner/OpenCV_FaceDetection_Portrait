@@ -412,12 +412,12 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
             if (canvas != null) {
                 if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT && mCameraIndex == CAMERA_ID_BACK) {
                     canvas.save();
-                    canvas.rotate(270,  (canvas.getWidth()/ 2),(canvas.getHeight()/ 2));
+                    canvas.rotate(270, (canvas.getWidth()/2), (canvas.getHeight()/2));
                 }
 
                 if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT && mCameraIndex == CAMERA_ID_FRONT) {
                     canvas.save();
-                    canvas.rotate(270,  (canvas.getWidth()/ 2),(canvas.getHeight()/ 2));
+                    canvas.rotate(270, (canvas.getWidth()/2), (canvas.getHeight()/2));
                 }
 
 
@@ -439,13 +439,11 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
                          (canvas.getHeight() - mCacheBitmap.getHeight()) / 2 + mCacheBitmap.getHeight()), null);
                 }
 
+                canvas.restore();
                 if (mFpsMeter != null) {
                     mFpsMeter.measure();
                     mFpsMeter.draw(canvas, 20, 30);
                 }
-//                if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-//                    canvas.restore();
-//                }
                 getHolder().unlockCanvasAndPost(canvas);
             }
         }
@@ -502,6 +500,9 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
             maxAllowedWidth = Math.max(a, b);
             maxAllowedHeight = Math.min(a, b);
         }
+        maxAllowedWidth = Math.max(a, b);
+        maxAllowedHeight = Math.min(a, b);
+        //Log.i("terry", "max size " + maxAllowedWidth + " " + maxAllowedHeight);
 
         for (Object size : supportedSizes) {
             int width = accessor.getWidth(size);

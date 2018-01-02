@@ -213,7 +213,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         tempMat.release();
 
 
-        if (mProtocol != null && !mProtocol.isProcessing()) {
+        if (mProtocol != null && !mProtocol.isProcessing() && !mProtocol.complete()) {
             mGray = inputFrame.gray();
 
             if (mAbsoluteFaceSize == 0) {
@@ -296,7 +296,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
     }
 
     private void onIdentify() {
-        if (mProtocol != null && mProtocol.get() >= 10) {
+        if (mProtocol != null && mProtocol.complete()) {
 
             Intent returnIntent = new Intent();
             setResult(Activity.RESULT_CANCELED, returnIntent);
@@ -304,7 +304,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         } else if (mProtocol == null) {
             finish();
         } else {
-            ((ImageView)findViewById(R.id.registerPhoto)).setImageBitmap(mCacheBitmap);
+            if (mCacheBitmap != null && !mCacheBitmap.isRecycled()) ((ImageView)findViewById(R.id.registerPhoto)).setImageBitmap(mCacheBitmap);
             switch (mProtocol.get()) {
                 case 1:
                     ((ImageView)findViewById(R.id.registerCount)).setImageResource(R.drawable.one);

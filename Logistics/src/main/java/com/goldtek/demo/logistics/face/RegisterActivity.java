@@ -25,7 +25,6 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.samples.facedetect.DetectionBasedTracker;
@@ -36,10 +35,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 
+import androidclient.CClientConnection;
+import androidclient.IClientProtocol;
+
 public class RegisterActivity extends Activity implements CvCameraViewListener2 {
 
     private static final String    TAG                 = "Register";
     private static final Scalar    FACE_RECT_COLOR     = new Scalar(0, 255, 0, 255);
+    public static final String     KEY_NAME            = "register_name";
+    public static final String     KEY_LEVEL           = "register_level";
     public static final int        JAVA_DETECTOR       = 0;
     public static final int        NATIVE_DETECTOR     = 1;
 
@@ -47,7 +51,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
     private Mat                    mGray;
     private File                   mCascadeFile;
     private CascadeClassifier      mJavaDetector;
-    private DetectionBasedTracker mNativeDetector;
+    private DetectionBasedTracker  mNativeDetector;
 
     private int                    mDetectorType       = NATIVE_DETECTOR;
     private String[]               mDetectorName;
@@ -55,13 +59,14 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
 
     private float                  mRelativeFaceSize   = 0.2f;
     private int                    mAbsoluteFaceSize   = 0;
+    private int                    mRegisteredFrame    = 0;
 
     private CameraBridgeViewBase   mOpenCvCameraView;
     private RegisterBox            mRegisterBox;
 
-    private MainHandler mHandler = new MainHandler(this);
-    private DummyProtocol mProtocol = new DummyProtocol(mHandler);;
-    private Bitmap mCacheBitmap;
+    private MainHandler            mHandler            = new MainHandler(this);
+    private Bitmap                 mCacheBitmap;
+    private IClientProtocol        mProtocol;
 
     private static class MainHandler extends Handler {
         private final WeakReference<RegisterActivity> mActivity;
@@ -73,8 +78,10 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         @Override
         public void handleMessage(Message msg) {
             RegisterActivity activity = mActivity.get();
+            String szMsgType = msg.getData().getString(CClientConnection.Hndl_MSGTYPE, "");
+            String szMsg = msg.getData().getString(CClientConnection.Hndl_MSG, "");
             if (activity != null) {
-                activity.onIdentify();
+                activity.onRegister();
             }
         }
     }
@@ -146,6 +153,8 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+        RegisterID = RegisterName = getIntent().getStringExtra(KEY_NAME);
+
         Log.i(TAG, getDeviceName());
         if (getDeviceName().contains("fc11501")) {
             mCameraFront = false;
@@ -167,7 +176,8 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
-        if (mProtocol != null) mProtocol.stop();
+        //if (mProtocol != null) mProtocol.stop();
+        Release();
     }
 
     @Override
@@ -181,6 +191,10 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
+
+
+        Release();
+        CreateNew();
     }
 
     public void onDestroy() {
@@ -213,7 +227,9 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         tempMat.release();
 
 
-        if (mProtocol != null && !mProtocol.isProcessing() && !mProtocol.complete()) {
+        //if (mProtocol != null && !mProtocol.isProcessing() && !mProtocol.complete())
+        if (mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing())
+        {
             mGray = inputFrame.gray();
 
             if (mAbsoluteFaceSize == 0) {
@@ -261,11 +277,19 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
             }
 
 
-            if (mProtocol != null && !mProtocol.isProcessing() && isExistFace) {
+            //if (mProtocol != null && !mProtocol.isProcessing() && isExistFace)
+            if (isExistFace)
+            {
                 Core.flip(tempMat, tempMat, 1);
                 Utils.matToBitmap(tempMat, mCacheBitmap);
-                mProtocol.start(mCacheBitmap);
+                //mProtocol.start(mCacheBitmap);
+                if(!mProtocol.sendImage(String.format("%s_%d", RegisterID, System.currentTimeMillis()), mCacheBitmap)) {
+                    Release();
+                    // TODO: error happened!
+                    //CreateNew();
+                }
             }
+
             if (facesArray.length > 0) tempMat.release();
         }
 
@@ -295,9 +319,9 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         }
     }
 
-    private void onIdentify() {
-        if (mProtocol != null && mProtocol.complete()) {
+    private void onRegister() {
 
+        if (mProtocol != null && mRegisteredFrame >= 10) {
             Intent returnIntent = new Intent();
             setResult(Activity.RESULT_CANCELED, returnIntent);
             finish();
@@ -305,7 +329,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
             finish();
         } else {
             if (mCacheBitmap != null && !mCacheBitmap.isRecycled()) ((ImageView)findViewById(R.id.registerPhoto)).setImageBitmap(mCacheBitmap);
-            switch (mProtocol.get()) {
+            switch (mRegisteredFrame) {
                 case 1:
                     ((ImageView)findViewById(R.id.registerCount)).setImageResource(R.drawable.one);
                     break;
@@ -337,6 +361,30 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
                     ((ImageView)findViewById(R.id.registerCount)).setImageResource(R.drawable.ten);
                     break;
             }
+        }
+        mRegisteredFrame++;
+
+    }
+
+    private String ServerIP     = "192.168.43.32";
+    private String RegisterName = "Fred";
+    private String RegisterID   = "Fred";
+
+    public void CreateNew() {
+        if(mProtocol == null) {
+            mProtocol = new CClientConnection(mHandler, CClientConnection.PORT,
+                    ServerIP,
+                    CClientConnection.CMDTYPE.REG,
+                    RegisterName,
+                    RegisterID);
+            mProtocol.start();
+        }
+    }
+
+    public void Release(){
+        if (mProtocol != null) {
+            mProtocol.OnStop();
+            mProtocol = null;
         }
     }
 

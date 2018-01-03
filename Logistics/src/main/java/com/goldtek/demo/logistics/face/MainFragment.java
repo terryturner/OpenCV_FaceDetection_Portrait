@@ -63,14 +63,17 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                     String name = data.getStringExtra(ProfileDialogFragment.RESPONSE_NAME);
                     int level = data.getIntExtra(ProfileDialogFragment.RESPONSE_LEVEL, 0);
                     //TODO: error check
-                    //startActivity(new Intent(getContext(), FaceTrackerActivity.class));
+                    Intent register = new Intent(getContext(), RegisterActivity.class);
+                    register.putExtra(RegisterActivity.KEY_NAME, name);
+                    register.putExtra(RegisterActivity.KEY_LEVEL, level);
+                    startActivity(register);
                 }
                 break;
             case REQUEST_IDENTIFY:
                 if (resultCode == Activity.RESULT_OK) {
                     new FancyAlert.Builder()
                         .setIconResource(R.drawable.tick_green)
-                        .setTitle("Validate")
+                        .setTitle(String.format("Validate %s", data.getStringExtra(IdentifyActivity.KEY_NAME)))
                         .setMessage("Pass")
                         .setClickMessage("OK")
                         .show(getActivity());
@@ -89,8 +92,8 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.Register:
-                //showDialog(PROFILE_CREATE);
-                startActivity(new Intent(getContext(), RegisterActivity.class));
+                showDialog(PROFILE_CREATE);
+                //startActivity(new Intent(getContext(), RegisterActivity.class));
                 break;
             case R.id.Identify:
                 startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);

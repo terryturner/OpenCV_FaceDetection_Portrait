@@ -10,11 +10,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.WindowManager;
-
-import com.goldtek.demo.logistics.face.dialog.FancyAlert;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -39,10 +35,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 
+import androidclient.CClientConnection;
+import androidclient.IClientProtocol;
+
 public class IdentifyActivity extends Activity implements CvCameraViewListener2 {
 
     private static final String    TAG                 = "Identify";
     private static final Scalar    FACE_RECT_COLOR     = new Scalar(0, 255, 0, 255);
+    public static final String     KEY_NAME            = "identify_name";
     public static final int        JAVA_DETECTOR       = 0;
     public static final int        NATIVE_DETECTOR     = 1;
 
@@ -50,7 +50,7 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
     private Mat                    mGray;
     private File                   mCascadeFile;
     private CascadeClassifier      mJavaDetector;
-    private DetectionBasedTracker mNativeDetector;
+    private DetectionBasedTracker  mNativeDetector;
 
     private int                    mDetectorType       = JAVA_DETECTOR;
     private String[]               mDetectorName;
@@ -58,12 +58,13 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
 
     private float                  mRelativeFaceSize   = 0.2f;
     private int                    mAbsoluteFaceSize   = 0;
+    private int                    mIdentifiedFrame    = 0;
 
     private CameraBridgeViewBase   mOpenCvCameraView;
 
-    private MainHandler mHandler = new MainHandler(this);
-    private DummyProtocol mProtocol = new DummyProtocol(mHandler);;
-    private Bitmap mCacheBitmap;
+    private MainHandler            mHandler            = new MainHandler(this);
+    private Bitmap                 mCacheBitmap;
+    private IClientProtocol        mProtocol;
 
     private static class MainHandler extends Handler {
         private final WeakReference<IdentifyActivity> mActivity;
@@ -75,8 +76,10 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         @Override
         public void handleMessage(Message msg) {
             IdentifyActivity activity = mActivity.get();
+            String szMsgType = msg.getData().getString(CClientConnection.Hndl_MSGTYPE, "");
+            String szMsg = msg.getData().getString(CClientConnection.Hndl_MSG, "");
             if (activity != null) {
-                activity.onIdentify();
+                activity.onIdentify(szMsg);
             }
         }
     }
@@ -168,7 +171,8 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
-        if (mProtocol != null) mProtocol.stop();
+        //if (mProtocol != null) mProtocol.stop();
+        Release();
     }
 
     @Override
@@ -182,6 +186,9 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
+
+        Release();
+        CreateNew();
     }
 
     public void onDestroy() {
@@ -213,7 +220,9 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         Core.flip(tempMat, mRgba, mCameraFront ? -1 : 1);
         tempMat.release();
 
-        if (mProtocol != null && !mProtocol.isProcessing()) {
+        //if (mProtocol != null && !mProtocol.isProcessing())
+        if (mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing())
+        {
             mGray = inputFrame.gray();
 
             if (mAbsoluteFaceSize == 0) {
@@ -246,9 +255,15 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
 
             if (facesArray.length > 0) isExistFace = true;
 
-            if (mProtocol != null && !mProtocol.isProcessing() && isExistFace) {
+            //if (mProtocol != null && !mProtocol.isProcessing() && isExistFace)
+            if (isExistFace)
+            {
                 Utils.matToBitmap(mRgba, mCacheBitmap);
-                mProtocol.start(mCacheBitmap);
+                if(!mProtocol.sendImage(String.format("%s_%d", RegisterID, System.currentTimeMillis()), mCacheBitmap)) {
+                    Release();
+                    // TODO: error happened!
+                    //CreateNew();
+                }
             }
         }
         tempMat = mRgba.t();
@@ -279,13 +294,42 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         }
     }
 
-    private void onIdentify() {
-        if (mProtocol != null && mProtocol.get() >= 3) {
+    private void onIdentify(String name) {
+        Log.i(TAG, "onIdentify" + mIdentifiedFrame + " " + name);
+        if (mIdentifiedFrame >= 10) {
             Intent returnIntent = new Intent();
             setResult(Activity.RESULT_CANCELED, returnIntent);
             finish();
         } else if (mProtocol == null) {
             finish();
+        } else if (name.equalsIgnoreCase("UNKNOWN")) {
+            Intent returnIntent = new Intent();
+            returnIntent.putExtra(KEY_NAME, name);
+            setResult(Activity.RESULT_OK, returnIntent);
+            finish();
+        }
+        mIdentifiedFrame++;
+    }
+
+    private String ServerIP     = "192.168.43.32";
+    private String RegisterName = "";
+    private String RegisterID   = "";
+
+    public void CreateNew() {
+        if(mProtocol == null) {
+            mProtocol = new CClientConnection(mHandler, CClientConnection.PORT,
+                    ServerIP,
+                    CClientConnection.CMDTYPE.LOGIN,
+                    RegisterName,
+                    RegisterID);
+            mProtocol.start();
+        }
+    }
+
+    public void Release(){
+        if (mProtocol != null) {
+            mProtocol.OnStop();
+            mProtocol = null;
         }
     }
 

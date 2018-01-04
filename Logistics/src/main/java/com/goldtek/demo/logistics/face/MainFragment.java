@@ -9,9 +9,13 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.Toast;
 
 import com.goldtek.demo.logistics.face.dialog.FancyAlert;
 import com.goldtek.demo.logistics.face.dialog.ProfileDialogFragment;
@@ -38,6 +42,23 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         Bundle bundle = getArguments();
         if (bundle != null)
             mArgument = bundle.getString(ARGUMENT);
+
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        // TODO Auto-generated method stub
+        super.onCreateOptionsMenu(menu, inflater);
+//        menu.add("Menu 1a").setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+//        menu.add("Menu 1b").setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // TODO Auto-generated method stub
+        Toast.makeText(getActivity(), "menu text is "+item.getTitle(), Toast.LENGTH_LONG).show();
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -76,6 +97,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                         .setTitle(String.format("Validate %s", data.getStringExtra(IdentifyActivity.KEY_NAME)))
                         .setMessage("Pass")
                         .setClickMessage("OK")
+                        .setOnClickListener(this)
                         .show(getActivity());
                 } else {
                     new FancyAlert.Builder()
@@ -100,6 +122,12 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                 break;
             case R.id.SettingServer:
                 showDialog(SETTING_SERVER);
+                break;
+            case R.id.click_btn:
+                CBroadcast m_objOpen = new CBroadcast(getContext());
+                if(m_objOpen != null){
+                    m_objOpen.iocontrollerOpen("Z01", m_objOpen.genMsgClientId());
+                }
                 break;
         }
     }

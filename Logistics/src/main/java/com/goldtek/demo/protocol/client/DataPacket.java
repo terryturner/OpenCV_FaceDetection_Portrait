@@ -1,4 +1,4 @@
-package androidclient;
+package com.goldtek.demo.protocol.client;
 
 import android.graphics.Bitmap;
 import android.util.Log;

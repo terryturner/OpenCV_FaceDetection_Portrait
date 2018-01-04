@@ -49,6 +49,7 @@ public class FancyAlert extends Dialog implements
         if (mBuilder.mTitle != null) ((TextView)findViewById(R.id.title)).setText(mBuilder.mTitle);
         if (mBuilder.mMessage != null) ((TextView)findViewById(R.id.message)).setText(mBuilder.mMessage);
         if (mBuilder.mClickMessage != null) ((Button)findViewById(R.id.click_btn)).setText(mBuilder.mClickMessage);
+        if (mBuilder.mClick != null) (findViewById(R.id.click_btn)).setOnClickListener(mBuilder.mClick);
     }
 
     @Override
@@ -65,6 +66,7 @@ public class FancyAlert extends Dialog implements
         private String mTitle = null;
         private String mMessage = null;
         private String mClickMessage = null;
+        private View.OnClickListener mClick = null;
 
         public Builder setIconResource(int res) {
             mIconRes = res;
@@ -83,6 +85,11 @@ public class FancyAlert extends Dialog implements
 
         public Builder setClickMessage(String msg) {
             mClickMessage = msg;
+            return this;
+        }
+
+        public Builder setOnClickListener(View.OnClickListener listener) {
+            mClick = listener;
             return this;
         }
 

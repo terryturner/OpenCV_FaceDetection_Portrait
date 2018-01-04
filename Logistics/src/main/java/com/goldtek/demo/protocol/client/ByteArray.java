@@ -1,4 +1,4 @@
-package androidclient;
+package com.goldtek.demo.protocol.client;
 
 /**
  * Created by darwinhu on 2017/12/20.

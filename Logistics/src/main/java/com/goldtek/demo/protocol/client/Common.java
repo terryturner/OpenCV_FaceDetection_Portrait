@@ -1,4 +1,4 @@
-package androidclient;
+package com.goldtek.demo.protocol.client;
 
 import android.content.Context;
 import android.content.SharedPreferences;

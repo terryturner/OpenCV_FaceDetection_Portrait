@@ -43,7 +43,7 @@ public class ServerDialogFragment extends DialogFragment {
         palmServer.setText(mPalmAddr);
 
         return new AlertDialog.Builder(getActivity())
-                .setIcon(android.R.drawable.sym_def_app_icon)
+                //.setIcon(R.drawable.goldtek)
                 .setTitle("Config servers")
                 .setView(view)
                 .setPositiveButton(R.string.btn_ok,

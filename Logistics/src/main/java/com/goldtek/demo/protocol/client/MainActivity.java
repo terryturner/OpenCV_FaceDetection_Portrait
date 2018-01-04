@@ -1,4 +1,4 @@
-package androidclient;
+package com.goldtek.demo.protocol.client;
 
 import android.app.Activity;
 import android.content.Context;
@@ -9,8 +9,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -109,7 +107,7 @@ public class MainActivity extends Activity {
 
 	public void Release(){
 		if (objClient != null) {
-			objClient.OnStop();
+			objClient.onStop();
 			objClient = null;
 		}
 	}

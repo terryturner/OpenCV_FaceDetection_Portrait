@@ -29,6 +29,7 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:27.0.2'
     compile 'com.android.support:cardview-v7:+'
+    compile 'com.github.dmytrodanylyk.circular-progress-button:library:1.1.3'
     compile project(':openCVLibrary331')
     compile project(':openCVSamplefacedetection')
     testCompile('junit:junit:4.12')

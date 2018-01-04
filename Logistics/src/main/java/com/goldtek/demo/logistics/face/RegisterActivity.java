@@ -35,13 +35,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 
-import androidclient.CClientConnection;
-import androidclient.IClientProtocol;
+import com.goldtek.demo.protocol.client.CClientConnection;
+import com.goldtek.demo.protocol.client.DummyProtocol;
+import com.goldtek.demo.protocol.client.IClientProtocol;
 
 public class RegisterActivity extends Activity implements CvCameraViewListener2 {
 
     private static final String    TAG                 = "Register";
     private static final Scalar    FACE_RECT_COLOR     = new Scalar(0, 255, 0, 255);
+    private static final boolean   FLAG_DEBUG          = true;
     public static final String     KEY_NAME            = "register_name";
     public static final String     KEY_LEVEL           = "register_level";
     public static final int        JAVA_DETECTOR       = 0;
@@ -59,7 +61,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
 
     private float                  mRelativeFaceSize   = 0.2f;
     private int                    mAbsoluteFaceSize   = 0;
-    private int                    mRegisteredFrame    = 0;
+    private int                    mSendFrame          = 0;
 
     private CameraBridgeViewBase   mOpenCvCameraView;
     private RegisterBox            mRegisterBox;
@@ -78,9 +80,12 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         @Override
         public void handleMessage(Message msg) {
             RegisterActivity activity = mActivity.get();
-            String szMsgType = msg.getData().getString(CClientConnection.Hndl_MSGTYPE, "");
-            String szMsg = msg.getData().getString(CClientConnection.Hndl_MSG, "");
+            String szMsgType = msg.getData().getString(IClientProtocol.Hndl_MSGTYPE, "");
+            String szMsg = msg.getData().getString(IClientProtocol.Hndl_MSG, "");
             if (activity != null) {
+                if (szMsgType.equalsIgnoreCase(IClientProtocol.CMDTYPE.REG)) {
+                    //TODO: check
+                }
                 activity.onRegister();
             }
         }
@@ -176,7 +181,6 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
-        //if (mProtocol != null) mProtocol.stop();
         Release();
     }
 
@@ -227,7 +231,6 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         tempMat.release();
 
 
-        //if (mProtocol != null && !mProtocol.isProcessing() && !mProtocol.complete())
         if (mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing())
         {
             mGray = inputFrame.gray();
@@ -277,16 +280,14 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
             }
 
 
-            //if (mProtocol != null && !mProtocol.isProcessing() && isExistFace)
             if (isExistFace)
             {
                 Core.flip(tempMat, tempMat, 1);
                 Utils.matToBitmap(tempMat, mCacheBitmap);
-                //mProtocol.start(mCacheBitmap);
                 if(!mProtocol.sendImage(String.format("%s_%d", RegisterID, System.currentTimeMillis()), mCacheBitmap)) {
                     Release();
-                    // TODO: error happened!
-                    //CreateNew();
+                    // TODO: error happened! tip some msg for user
+                    finish();
                 }
             }
 
@@ -321,7 +322,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
 
     private void onRegister() {
 
-        if (mProtocol != null && mRegisteredFrame >= 10) {
+        if (mProtocol != null && mSendFrame >= 10) {
             Intent returnIntent = new Intent();
             setResult(Activity.RESULT_CANCELED, returnIntent);
             finish();
@@ -329,7 +330,9 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
             finish();
         } else {
             if (mCacheBitmap != null && !mCacheBitmap.isRecycled()) ((ImageView)findViewById(R.id.registerPhoto)).setImageBitmap(mCacheBitmap);
-            switch (mRegisteredFrame) {
+            mSendFrame++;
+
+            switch (mSendFrame) {
                 case 1:
                     ((ImageView)findViewById(R.id.registerCount)).setImageResource(R.drawable.one);
                     break;
@@ -362,7 +365,6 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
                     break;
             }
         }
-        mRegisteredFrame++;
 
     }
 
@@ -372,9 +374,10 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
 
     public void CreateNew() {
         if(mProtocol == null) {
-            mProtocol = new CClientConnection(mHandler, CClientConnection.PORT,
+            if (FLAG_DEBUG) mProtocol = new DummyProtocol(mHandler);
+            else mProtocol = new CClientConnection(mHandler, CClientConnection.PORT,
                     ServerIP,
-                    CClientConnection.CMDTYPE.REG,
+                    IClientProtocol.CMDTYPE.REG,
                     RegisterName,
                     RegisterID);
             mProtocol.start();
@@ -383,7 +386,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
 
     public void Release(){
         if (mProtocol != null) {
-            mProtocol.OnStop();
+            mProtocol.onStop();
             mProtocol = null;
         }
     }

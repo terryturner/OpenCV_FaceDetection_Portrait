@@ -46,7 +46,7 @@ public class ProfileDialogFragment extends DialogFragment {
         });
 
         return new AlertDialog.Builder(getActivity())
-                .setIcon(android.R.drawable.sym_def_app_icon)
+                //.setIcon(R.drawable.goldtek)
                 .setTitle("Register")
                 .setView(view)
                 .setPositiveButton(R.string.btn_ok,

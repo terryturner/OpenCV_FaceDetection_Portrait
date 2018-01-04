@@ -6,6 +6,9 @@
     <string name="btn_capture">Click</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">CANCEL</string>
+    <string name="btn_register">Register</string>
+    <string name="btn_identify">Identify</string>
+    <string name="btn_setting">Setting</string>
 
     <!-- Toast Messages -->
     <string name="camera_not_found">No camera harware found</string>

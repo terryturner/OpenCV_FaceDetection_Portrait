@@ -35,8 +35,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 
-import androidclient.CClientConnection;
-import androidclient.IClientProtocol;
+import com.goldtek.demo.protocol.client.CClientConnection;
+import com.goldtek.demo.protocol.client.IClientProtocol;
 
 public class IdentifyActivity extends Activity implements CvCameraViewListener2 {
 
@@ -76,8 +76,8 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         @Override
         public void handleMessage(Message msg) {
             IdentifyActivity activity = mActivity.get();
-            String szMsgType = msg.getData().getString(CClientConnection.Hndl_MSGTYPE, "");
-            String szMsg = msg.getData().getString(CClientConnection.Hndl_MSG, "");
+            String szMsgType = msg.getData().getString(IClientProtocol.Hndl_MSGTYPE, "");
+            String szMsg = msg.getData().getString(IClientProtocol.Hndl_MSG, "");
             if (activity != null) {
                 activity.onIdentify(szMsg);
             }
@@ -319,7 +319,7 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         if(mProtocol == null) {
             mProtocol = new CClientConnection(mHandler, CClientConnection.PORT,
                     ServerIP,
-                    CClientConnection.CMDTYPE.LOGIN,
+                    IClientProtocol.CMDTYPE.LOGIN,
                     RegisterName,
                     RegisterID);
             mProtocol.start();
@@ -328,7 +328,7 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
 
     public void Release(){
         if (mProtocol != null) {
-            mProtocol.OnStop();
+            mProtocol.onStop();
             mProtocol = null;
         }
     }

@@ -2,27 +2,30 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
+    android:background="@drawable/gradient1"
     tools:context="com.goldtek.demo.logistics.face.MainActivity">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1">
-        <Button
-            android:text="Register"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+
+        <com.dd.CircularProgressButton
+            android:id="@+id/Register"
+            android:layout_width="196dp"
+            android:layout_height="64dp"
             android:layout_centerInParent="true"
-            android:id="@+id/Register" />
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            app:cpb_cornerRadius="32dp"
+            app:cpb_selectorIdle="@drawable/main_btn_selector"
+            app:cpb_textIdle="@string/btn_register" />
     </RelativeLayout>
 
 
@@ -30,23 +33,33 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1">
-        <Button
-            android:text="Identify"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+
+        <com.dd.CircularProgressButton
+            android:id="@+id/Identify"
+            android:layout_width="196dp"
+            android:layout_height="64dp"
             android:layout_centerInParent="true"
-            android:id="@+id/Identify" />
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            app:cpb_cornerRadius="32dp"
+            app:cpb_selectorIdle="@drawable/main_btn_selector"
+            app:cpb_textIdle="@string/btn_identify" />
     </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1">
-        <Button
-            android:text="Server"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+
+        <com.dd.CircularProgressButton
+            android:id="@+id/SettingServer"
+            android:layout_width="196dp"
+            android:layout_height="64dp"
             android:layout_centerInParent="true"
-            android:id="@+id/SettingServer" />
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            app:cpb_cornerRadius="32dp"
+            app:cpb_selectorIdle="@drawable/main_btn_selector"
+            app:cpb_textIdle="@string/btn_setting" />
     </RelativeLayout>
 </LinearLayout>

@@ -1,11 +1,10 @@
-package com.goldtek.demo.logistics.face;
+package com.goldtek.demo.protocol.client;
 
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 
-import androidclient.IClientProtocol;
+import com.goldtek.demo.protocol.client.IClientProtocol;
 
 /**
  * Created by Terry on 2017/12/25 0025.
@@ -14,39 +13,18 @@ import androidclient.IClientProtocol;
 public class DummyProtocol implements IClientProtocol {
     private final Handler mHandler;
     private Thread mThread;
-    private int limit = 10;
-    private int result = 0;
 
     public DummyProtocol(Handler h) {
         mHandler = h;
-
-    }
-
-    public void start(final Bitmap bitmap) {
-        result++;
-        mThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    //Utils.saveTempBitmap(bitmap);
-                    Thread.sleep(3000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                //Log.i("terry", "thread send msg");
-                mHandler.sendMessage(new Message());
-            }
-        });
-        mThread.start();
-    }
-
-    public void stop() {
-        if (mThread != null) mThread.interrupt();
     }
 
     private boolean m_bInterrupt = false;
+    private boolean m_bProcess = false;
+
     @Override
     public void start() {
+        if (mThread != null) return;
+
         mThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -58,7 +36,8 @@ public class DummyProtocol implements IClientProtocol {
                         e.printStackTrace();
                     }
                     //Log.i("terry", "thread send msg");
-                    mHandler.sendMessage(new Message());
+                    if (m_bProcess) mHandler.sendMessage(new Message());
+                    m_bProcess = false;
                 }
             }
         });
@@ -66,30 +45,25 @@ public class DummyProtocol implements IClientProtocol {
     }
 
     @Override
-    public void OnStop() {
-        mThread.interrupt();
+    public void onStop() {
+        if (mThread != null) mThread.interrupt();
         m_bInterrupt = true;
+        mThread = null;
     }
 
     @Override
     public boolean sendImage(String szName, Bitmap bmp) {
-        return false;
+        m_bProcess = true;
+        return true;
     }
 
     @Override
     public boolean isReady() {
-        return false;
-    }
-
-    public boolean isProcessing() {
         return (mThread != null) ? mThread.isAlive() : false;
     }
 
-    public int get() {
-        return result;
+    public boolean isProcessing() {
+        return m_bProcess;
     }
 
-    public boolean complete() {
-        return result >= limit;
-    }
 }

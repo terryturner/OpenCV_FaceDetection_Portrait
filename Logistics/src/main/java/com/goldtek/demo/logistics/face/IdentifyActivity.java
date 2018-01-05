@@ -11,6 +11,7 @@ import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -36,12 +37,15 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 
 import com.goldtek.demo.protocol.client.CClientConnection;
+import com.goldtek.demo.protocol.client.DummyProtocol;
+import com.goldtek.demo.protocol.client.GtClient;
 import com.goldtek.demo.protocol.client.IClientProtocol;
 
 public class IdentifyActivity extends Activity implements CvCameraViewListener2 {
 
     private static final String    TAG                 = "Identify";
     private static final Scalar    FACE_RECT_COLOR     = new Scalar(0, 255, 0, 255);
+    private static final boolean   FLAG_DEBUG          = false;
     public static final String     KEY_NAME            = "identify_name";
     public static final int        JAVA_DETECTOR       = 0;
     public static final int        NATIVE_DETECTOR     = 1;
@@ -59,6 +63,7 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
     private float                  mRelativeFaceSize   = 0.2f;
     private int                    mAbsoluteFaceSize   = 0;
     private int                    mIdentifiedFrame    = 0;
+    private boolean                mIdentifiedDone     = false;
 
     private CameraBridgeViewBase   mOpenCvCameraView;
 
@@ -78,8 +83,15 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
             IdentifyActivity activity = mActivity.get();
             String szMsgType = msg.getData().getString(IClientProtocol.Hndl_MSGTYPE, "");
             String szMsg = msg.getData().getString(IClientProtocol.Hndl_MSG, "");
-            if (activity != null) {
-                activity.onIdentify(szMsg);
+            if (activity != null && szMsgType.equalsIgnoreCase(IClientProtocol.MSGTYPE.RECV)) {
+                String szInfo = CClientConnection.getTagValue(szMsg, IClientProtocol.XML.INFO);
+                String szResult = CClientConnection.getTagValue(szMsg, IClientProtocol.XML.RESULT);
+
+                if (szInfo.equalsIgnoreCase(IClientProtocol.CMDTYPE.LOGIN_DONE)) {
+                    activity.onIdentify(szResult);
+                }
+            } else if (activity != null && szMsgType.equalsIgnoreCase(IClientProtocol.MSGTYPE.ERR)) {
+                Toast.makeText(activity, szMsg, Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -169,10 +181,10 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
     public void onPause()
     {
         super.onPause();
-        if (mOpenCvCameraView != null)
-            mOpenCvCameraView.disableView();
-        //if (mProtocol != null) mProtocol.stop();
         Release();
+        if (mOpenCvCameraView != null) {
+            mOpenCvCameraView.disableView();
+        }
     }
 
     @Override
@@ -220,7 +232,6 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         Core.flip(tempMat, mRgba, mCameraFront ? -1 : 1);
         tempMat.release();
 
-        //if (mProtocol != null && !mProtocol.isProcessing())
         if (mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing())
         {
             mGray = inputFrame.gray();
@@ -250,21 +261,27 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
             mGray.release();
 
             Rect[] facesArray = faces.toArray();
+            if (facesArray.length > 0) {
+                isExistFace = true;
+                tempMat = mRgba.clone();
+            }
             for (Rect rect: facesArray)
                 Imgproc.rectangle(mRgba, rect.tl(), rect.br(), FACE_RECT_COLOR, 3);
 
-            if (facesArray.length > 0) isExistFace = true;
 
-            //if (mProtocol != null && !mProtocol.isProcessing() && isExistFace)
             if (isExistFace)
             {
-                Utils.matToBitmap(mRgba, mCacheBitmap);
-                if(!mProtocol.sendImage(String.format("%s_%d", RegisterID, System.currentTimeMillis()), mCacheBitmap)) {
+                Core.flip(tempMat, tempMat, 1);
+                Utils.matToBitmap(tempMat, mCacheBitmap);
+                if(mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing() &&
+                        !mProtocol.sendImage(String.format("%s_%d", RegisterID, System.currentTimeMillis()), mCacheBitmap)) {
                     Release();
                     // TODO: error happened!
                     //CreateNew();
                 }
             }
+
+            if (facesArray.length > 0) tempMat.release();
         }
         tempMat = mRgba.t();
         Core.flip(tempMat, mRgba, mCameraFront ? 1 : -1);
@@ -295,14 +312,15 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
     }
 
     private void onIdentify(String name) {
-        Log.i(TAG, "onIdentify" + mIdentifiedFrame + " " + name);
+        Log.i(TAG, "onIdentify " + mIdentifiedFrame + ": " + name);
+
         if (mIdentifiedFrame >= 10) {
             Intent returnIntent = new Intent();
             setResult(Activity.RESULT_CANCELED, returnIntent);
             finish();
         } else if (mProtocol == null) {
             finish();
-        } else if (name.equalsIgnoreCase("UNKNOWN")) {
+        } else if (!name.equalsIgnoreCase("UNKNOWN")) {
             Intent returnIntent = new Intent();
             returnIntent.putExtra(KEY_NAME, name);
             setResult(Activity.RESULT_OK, returnIntent);
@@ -311,13 +329,16 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         mIdentifiedFrame++;
     }
 
-    private String ServerIP     = "192.168.43.32";
+    private String ServerIP     = "192.168.1.31";
     private String RegisterName = "";
     private String RegisterID   = "";
 
     public void CreateNew() {
+
         if(mProtocol == null) {
-            mProtocol = new CClientConnection(mHandler, CClientConnection.PORT,
+            if (FLAG_DEBUG) mProtocol = new DummyProtocol(mHandler, IClientProtocol.CMDTYPE.LOGIN);
+            else mProtocol = new GtClient
+                    (mHandler, -1,
                     ServerIP,
                     IClientProtocol.CMDTYPE.LOGIN,
                     RegisterName,

@@ -9,6 +9,7 @@ import android.util.Log;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.regex.Pattern;
 
@@ -59,8 +60,8 @@ import java.util.regex.Pattern;
 public class GtClient implements IClientProtocol {
 
     private static final String TAG = "CClientConnection";
-    private static final Pattern ext = Pattern.compile("(?<=.)\\.[^.]+$");
     private static final int BUFFSIZE = 512;
+    private static final int TIMEOUT_CONNECT = 1000;
     public static final int PORT = 6666;
 
     private int m_nPort;
@@ -72,33 +73,12 @@ public class GtClient implements IClientProtocol {
     private String m_szID;
 
     private Handler m_Handler;
-
-
-    /*** Command TYPE ***/
-    public static class CMDTYPE {
-        public static final String REG = "REGISTER";
-        public static final String LOGIN = "LOGIN";
-    }
-
-    /*** Protocol  ***/
-    public static class XML {
-        public static final String INFO = "info";
-        public static final String RESULT = "result";
-    }
-
-    /*** Handler ***/
-    public static final String Hndl_MSG             = "MSG";
-    public static final String Hndl_MSGTYPE         = "MSGTYPE";
-    public static class MSGTYPE {
-        public static final String STATUS = "STATUS";
-        public static final String RECV   = "RECV";
-        public static final String OTHER  = "OTHER";
-    }
-
-    private boolean m_bRunning = false;
-    private boolean m_bSending = false;
     private Listener mListener = new Listener();
     private Sender   mSender   = new Sender();
+
+    private boolean m_bRunning = false;
+    private boolean m_bReady = false;
+    private boolean m_bSending = false;
 
     /**
      *
@@ -112,7 +92,7 @@ public class GtClient implements IClientProtocol {
     public GtClient(Handler handler, int nPort, String szSvrIP, String szCmd,
                     String szName, String szID){
         this.m_Handler = handler;
-        this.m_nPort    = nPort;
+        this.m_nPort    = (nPort > 0) ? nPort : PORT;
         this.m_szSvrIP  = szSvrIP;
         this.m_szCmd    = szCmd;
         this.m_szName   = szName;
@@ -163,7 +143,7 @@ public class GtClient implements IClientProtocol {
                                 Thread.sleep(1000);
                                 continue;
                             } else {
-                                String szMsg = readByteToString(inputData);
+                                String szMsg = Common.readByteToString(inputData);
                                 String[] separated = szMsg.split("</GOLDTEK><GOLDTEK>");
                                 for(String split : separated){
                                     Log.d(TAG, split);
@@ -172,16 +152,19 @@ public class GtClient implements IClientProtocol {
                                 }
 
                             }
-                        } catch (InterruptedException exception) {
+                        } catch (InterruptedException e) {
                             Log.e(TAG, "InterruptedException");
-                        } catch (Exception exception) {
-                            Log.e(TAG, exception.getLocalizedMessage());
+                            callback_Error(e.getClass().getCanonicalName());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            callback_Error(e.getClass().getCanonicalName());
                         }
 
                     }
 
                 } catch (IOException e) {
                     e.printStackTrace();
+                    callback_Error(e.getClass().getCanonicalName());
                 }
             }
         }
@@ -191,9 +174,6 @@ public class GtClient implements IClientProtocol {
             bInterrupt = true;
         }
 
-        public boolean isReady() {
-            return bIsConnect;
-        }
     }
 
 
@@ -216,11 +196,13 @@ public class GtClient implements IClientProtocol {
                     } catch (IOException e) {
                         e.printStackTrace();
                         Log.e(TAG, e.getLocalizedMessage());
+
+                        callback_Error(e.getClass().getCanonicalName());
                     }
                     btsPackets = null;
                 }
                 try {
-                    sleep(1000);
+                    sleep(500);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -255,7 +237,7 @@ public class GtClient implements IClientProtocol {
     }
 
     public boolean isReady() {
-        return mListener.isReady();
+        return m_bReady;
     }
 
     public boolean isProcessing() {
@@ -265,7 +247,10 @@ public class GtClient implements IClientProtocol {
     private synchronized boolean Connecting(){
         boolean ret = false;
         try {
-            m_socket = new Socket(m_szSvrIP, m_nPort);
+            Log.e(TAG, "Trying Connecting");
+            m_socket = new Socket();
+            m_socket.connect(new InetSocketAddress(m_szSvrIP, m_nPort), TIMEOUT_CONNECT);
+
             m_bRunning = true;
             // Send Handler status
             callback_Status(true);
@@ -318,6 +303,26 @@ public class GtClient implements IClientProtocol {
         b.putString(Hndl_MSG, message);
         msg.setData(b);
         m_Handler.sendMessage(msg);
+
+        if (Common.getTagValue(message, IClientProtocol.XML.INFO).equalsIgnoreCase(m_szCmd)) {
+            if (Common.getTagValue(message, IClientProtocol.XML.RESULT).equalsIgnoreCase(RESULT.SUCCESS))
+                m_bReady = true;
+            else
+                m_bReady = false;
+        }
+    }
+
+    private void callback_Error(String message) {
+        m_bReady = false;
+        m_bSending = false;
+        m_bRunning = false;
+
+        Message msg = m_Handler.obtainMessage();
+        Bundle b = new Bundle();
+        b.putString(Hndl_MSGTYPE, MSGTYPE.ERR);
+        b.putString(Hndl_MSG, message);
+        msg.setData(b);
+        m_Handler.sendMessage(msg);
     }
 
     //==============================================================================================
@@ -328,31 +333,5 @@ public class GtClient implements IClientProtocol {
         return szInfo;
     }
 
-    public static String getFileNameWithoutExtension(String file) {
-        return ext.matcher(file).replaceAll("");
-    }
-
-    public static String readByteToString(byte[] szName){
-        return new String(szName).replaceAll("[^\\p{Print}]","");
-    }
-
-    public static void writeIntToByte(byte[] data, int offset, int value) {
-        data[offset] = (byte)((value >>> 24) & 0xFF);
-        data[offset + 1] = (byte)((value >>> 16) & 0xFF);
-        data[offset + 2] = (byte)((value >>> 8) & 0xFF);
-        data[offset + 3] = (byte)((value >>> 0) & 0xFF);
-    }
-
-    public static int readByteToInt(byte[] data, int offset) {
-        int ch1 = data[offset] & 0xff;
-        int ch2 = data[offset + 1] & 0xff;
-        int ch3 = data[offset + 2] & 0xff;
-        int ch4 = data[offset + 3] & 0xff;
-        return (ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0);
-    }
-
-    public static String getTagValue(String xml, String tagName){
-        return xml.split("<"+tagName+">")[1].split("</"+tagName+">")[0];
-    }
 
 }

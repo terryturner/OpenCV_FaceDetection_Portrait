@@ -34,8 +34,8 @@ import java.util.regex.Pattern;
  *          send: <GOLDTEK><size>27192</size><id>Fred</id><name>Fred_1</name></GOLDTEK>...IMAGE...
  *          . . .
  *      // Client will receive the last Message from Server that register is success
- *          recv_Success: <GOLDTEK><info>REGISTER</info><result>1</result></GOLDTEK>
- *          recv_Failed: <GOLDTEK><info>REGISTER</info><result>-1</result></GOLDTEK>
+ *          recv_Success: <GOLDTEK><info>REGISTER_DONE</info><result>1</result></GOLDTEK>
+ *          recv_Failed: <GOLDTEK><info>REGISTER_DONE</info><result>-1</result></GOLDTEK>
  *
  *
  * 2. LOGIN
@@ -51,8 +51,8 @@ import java.util.regex.Pattern;
  *          recv_Failed: <GOLDTEK><info>Fred_0</info><result>-1</result></GOLDTEK>
  *
  *      // Client will receive the last Message from Server that recognition is success
- *          recv_Success: <GOLDTEK><info>LOGIN</info><result>Fred 100%</result></GOLDTEK>
- *          recv_Failed: <GOLDTEK><info>LOGIN</info><result>UNKNOWN</result></GOLDTEK>
+ *          recv_Success: <GOLDTEK><info>LOGIN_DONE</info><result>Fred 100%</result></GOLDTEK>
+ *          recv_Failed: <GOLDTEK><info>LOGIN_DONE</info><result>UNKNOWN</result></GOLDTEK>
  *
  */
 
@@ -67,9 +67,9 @@ public class CClientConnection extends Thread implements Runnable, IClientProtoc
     private String m_szName;
     private String m_szID;
 
-    private boolean mInterrupt = false;
-    private boolean m_isReady = false;
-    private boolean m_isProcessing = false;
+    private boolean m_bInterrupt = false;
+    private boolean m_bIsReady = false;
+    private boolean m_bIsProcessing = false;
     private Handler m_Handler;
     private int BUFFSIZE = 512;
 
@@ -112,7 +112,7 @@ public class CClientConnection extends Thread implements Runnable, IClientProtoc
     public CClientConnection(Handler handler, int nPort, String szSvrIP, String szCmd,
                              String szName, String szID){
         this.m_Handler = handler;
-        this.m_nPort    = nPort;
+        this.m_nPort    = (nPort > 0) ? nPort : PORT;
         this.m_szSvrIP  = szSvrIP;
         this.m_szCmd    = szCmd;
         this.m_szName   = szName;
@@ -134,7 +134,7 @@ public class CClientConnection extends Thread implements Runnable, IClientProtoc
 //        }
 
         boolean isConnected = false;
-        while(!mInterrupt){
+        while(!m_bInterrupt){
             isConnected = Connecting();
             if(isConnected)
                 break;
@@ -191,7 +191,7 @@ public class CClientConnection extends Thread implements Runnable, IClientProtoc
     }
 
     private boolean Sending(byte[] packet){
-        m_isProcessing = true;
+        m_bIsProcessing = true;
         boolean ret = false;
         try {
             DataOutputStream output = new DataOutputStream(m_socket.getOutputStream());
@@ -213,7 +213,7 @@ public class CClientConnection extends Thread implements Runnable, IClientProtoc
         this.interrupt();
         Disconnecting();
         m_Handler.removeCallbacks(this);
-        mInterrupt = true;
+        m_bInterrupt = true;
     }
 
     public boolean sendImage(String szName, Bitmap bmp) {
@@ -224,11 +224,11 @@ public class CClientConnection extends Thread implements Runnable, IClientProtoc
     }
 
     public boolean isReady() {
-        return m_isReady;
+        return m_bIsReady;
     }
 
     public boolean isProcessing() {
-        return m_isProcessing;
+        return m_bIsProcessing;
     }
 
     private boolean Connecting(){
@@ -269,7 +269,6 @@ public class CClientConnection extends Thread implements Runnable, IClientProtoc
     private void callback_Status(boolean isConnectedNow){
         // Send Message Into Main Thread
         Log.d(TAG,"callback_Status " + String.valueOf(isConnectedNow));
-        m_isReady = isConnectedNow;
 
         Message msg = m_Handler.obtainMessage();
         Bundle b = new Bundle();
@@ -282,7 +281,7 @@ public class CClientConnection extends Thread implements Runnable, IClientProtoc
     private void callback_Receive(String message){
         // Send Message Into Main Thread
         Log.d(TAG,"<-- " + message);
-        m_isProcessing = false;
+        m_bIsProcessing = false;
 
         Message msg = m_Handler.obtainMessage();
         Bundle b = new Bundle();
@@ -290,6 +289,10 @@ public class CClientConnection extends Thread implements Runnable, IClientProtoc
         b.putString(Hndl_MSG, message);
         msg.setData(b);
         m_Handler.sendMessage(msg);
+
+        if (getTagValue(message, IClientProtocol.XML.INFO).equalsIgnoreCase(m_szCmd) &&
+                getTagValue(message, IClientProtocol.XML.RESULT).equalsIgnoreCase(RESULT.SUCCESS))
+            m_bIsReady = true;
     }
 
     //==============================================================================================

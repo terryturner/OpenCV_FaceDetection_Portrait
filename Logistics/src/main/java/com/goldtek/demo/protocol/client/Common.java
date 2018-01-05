@@ -10,6 +10,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
+import java.util.regex.Pattern;
 
 /**
  * Created by darwinhu on 2017/12/18.
@@ -156,4 +157,31 @@ public class Common {
     }
 
 
+    public static String getFileNameWithoutExtension(String file) {
+        final Pattern ext = Pattern.compile("(?<=.)\\.[^.]+$");
+        return ext.matcher(file).replaceAll("");
+    }
+
+    public static String readByteToString(byte[] szName){
+        return new String(szName).replaceAll("[^\\p{Print}]","");
+    }
+
+    public static void writeIntToByte(byte[] data, int offset, int value) {
+        data[offset] = (byte)((value >>> 24) & 0xFF);
+        data[offset + 1] = (byte)((value >>> 16) & 0xFF);
+        data[offset + 2] = (byte)((value >>> 8) & 0xFF);
+        data[offset + 3] = (byte)((value >>> 0) & 0xFF);
+    }
+
+    public static int readByteToInt(byte[] data, int offset) {
+        int ch1 = data[offset] & 0xff;
+        int ch2 = data[offset + 1] & 0xff;
+        int ch3 = data[offset + 2] & 0xff;
+        int ch4 = data[offset + 3] & 0xff;
+        return (ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0);
+    }
+
+    public static String getTagValue(String xml, String tagName){
+        return xml.split("<"+tagName+">")[1].split("</"+tagName+">")[0];
+    }
 }

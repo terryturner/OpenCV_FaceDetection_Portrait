@@ -12,6 +12,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -37,13 +38,14 @@ import java.lang.ref.WeakReference;
 
 import com.goldtek.demo.protocol.client.CClientConnection;
 import com.goldtek.demo.protocol.client.DummyProtocol;
+import com.goldtek.demo.protocol.client.GtClient;
 import com.goldtek.demo.protocol.client.IClientProtocol;
 
 public class RegisterActivity extends Activity implements CvCameraViewListener2 {
 
     private static final String    TAG                 = "Register";
     private static final Scalar    FACE_RECT_COLOR     = new Scalar(0, 255, 0, 255);
-    private static final boolean   FLAG_DEBUG          = true;
+    private static final boolean   FLAG_DEBUG          = false;
     public static final String     KEY_NAME            = "register_name";
     public static final String     KEY_LEVEL           = "register_level";
     public static final int        JAVA_DETECTOR       = 0;
@@ -82,11 +84,26 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
             RegisterActivity activity = mActivity.get();
             String szMsgType = msg.getData().getString(IClientProtocol.Hndl_MSGTYPE, "");
             String szMsg = msg.getData().getString(IClientProtocol.Hndl_MSG, "");
-            if (activity != null) {
-                if (szMsgType.equalsIgnoreCase(IClientProtocol.CMDTYPE.REG)) {
-                    //TODO: check
+            if (activity != null && szMsgType.equalsIgnoreCase(IClientProtocol.MSGTYPE.RECV)) {
+                String szInfo = CClientConnection.getTagValue(szMsg, IClientProtocol.XML.INFO);
+                String szResult = CClientConnection.getTagValue(szMsg, IClientProtocol.XML.RESULT);
+
+                if (szInfo.equalsIgnoreCase(IClientProtocol.CMDTYPE.REG_DONE)) {
+                    // TODO: check register process & hint to user
+                    Intent returnIntent = new Intent();
+                    if (szResult.equalsIgnoreCase(IClientProtocol.RESULT.SUCCESS))
+                        activity.setResult(Activity.RESULT_OK, returnIntent);
+                    else
+                        activity.setResult(Activity.RESULT_CANCELED, returnIntent);
+                    activity.finish();
+                } else if (!szInfo.equalsIgnoreCase(IClientProtocol.CMDTYPE.REG) &&
+                        szResult.equalsIgnoreCase(IClientProtocol.RESULT.SUCCESS)) {
+                    activity.onRegister();
                 }
-                activity.onRegister();
+                // TODO: if send image fail, update UI?
+            } else if (activity != null && szMsgType.equalsIgnoreCase(IClientProtocol.MSGTYPE.ERR)) {
+                Toast.makeText(activity, szMsg, Toast.LENGTH_LONG).show();
+                activity.finish();
             }
         }
     }
@@ -284,7 +301,8 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
             {
                 Core.flip(tempMat, tempMat, 1);
                 Utils.matToBitmap(tempMat, mCacheBitmap);
-                if(!mProtocol.sendImage(String.format("%s_%d", RegisterID, System.currentTimeMillis()), mCacheBitmap)) {
+                if(mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing() &&
+                        !mProtocol.sendImage(String.format("%s_%d", RegisterID, System.currentTimeMillis()), mCacheBitmap)) {
                     Release();
                     // TODO: error happened! tip some msg for user
                     finish();
@@ -322,7 +340,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
 
     private void onRegister() {
 
-        if (mProtocol != null && mSendFrame >= 10) {
+        if (mSendFrame >= 10) {
             Intent returnIntent = new Intent();
             setResult(Activity.RESULT_CANCELED, returnIntent);
             finish();
@@ -332,7 +350,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
             if (mCacheBitmap != null && !mCacheBitmap.isRecycled()) ((ImageView)findViewById(R.id.registerPhoto)).setImageBitmap(mCacheBitmap);
             mSendFrame++;
 
-            switch (mSendFrame) {
+            switch (mSendFrame % 11) {
                 case 1:
                     ((ImageView)findViewById(R.id.registerCount)).setImageResource(R.drawable.one);
                     break;
@@ -368,14 +386,15 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
 
     }
 
-    private String ServerIP     = "192.168.43.32";
+    private String ServerIP     = "192.168.1.31";
     private String RegisterName = "Fred";
     private String RegisterID   = "Fred";
 
     public void CreateNew() {
         if(mProtocol == null) {
-            if (FLAG_DEBUG) mProtocol = new DummyProtocol(mHandler);
-            else mProtocol = new CClientConnection(mHandler, CClientConnection.PORT,
+            if (FLAG_DEBUG) mProtocol = new DummyProtocol(mHandler, IClientProtocol.CMDTYPE.REG);
+            else mProtocol = new GtClient(
+                    mHandler, -1,
                     ServerIP,
                     IClientProtocol.CMDTYPE.REG,
                     RegisterName,

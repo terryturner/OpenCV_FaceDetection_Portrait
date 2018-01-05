@@ -32,7 +32,8 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     public static final String PROFILE_CREATE = "profile_create_dialog";
     public static final String SETTING_SERVER = "config_server_dialog";
     public static final int REQUEST_PROFILE_CREATE = 0X110;
-    public static final int REQUEST_IDENTIFY = 0X111;
+    public static final int REQUEST_REGISTER = 0X111;
+    public static final int REQUEST_IDENTIFY = 0X112;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -87,24 +88,33 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                     Intent register = new Intent(getContext(), RegisterActivity.class);
                     register.putExtra(RegisterActivity.KEY_NAME, name);
                     register.putExtra(RegisterActivity.KEY_LEVEL, level);
-                    startActivity(register);
+                    startActivityForResult(register, REQUEST_REGISTER);
                 }
                 break;
+            case REQUEST_REGISTER:
             case REQUEST_IDENTIFY:
+                String title = "";
                 if (resultCode == Activity.RESULT_OK) {
+                    if (requestCode == REQUEST_REGISTER) title = "Register";
+                    else title = String.format("Validate %s", data.getStringExtra(IdentifyActivity.KEY_NAME));
+
                     new FancyAlert.Builder()
                         .setIconResource(R.drawable.tick_green)
-                        .setTitle(String.format("Validate %s", data.getStringExtra(IdentifyActivity.KEY_NAME)))
+                        .setTitle(title)
                         .setMessage("Pass")
-                        .setClickMessage("OK")
+                        .setClickMessage(getString(R.string.btn_ok))
                         .setOnClickListener(this)
                         .show(getActivity());
                 } else {
+                    if (requestCode == REQUEST_REGISTER) title = "Register";
+                    else title = ("Validate");
+
                     new FancyAlert.Builder()
                         .setIconResource(R.drawable.fail_red)
-                        .setTitle("Validate")
+                        .setTitle(title)
                         .setMessage("Fail")
-                        .setClickMessage("OK").show(getActivity());
+                        .setClickMessage(getString(R.string.btn_ok))
+                        .show(getActivity());
                 }
                 break;
         }

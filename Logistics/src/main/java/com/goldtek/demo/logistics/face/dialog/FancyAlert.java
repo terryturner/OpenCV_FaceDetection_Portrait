@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
@@ -23,7 +24,7 @@ public class FancyAlert extends Dialog implements
     private Activity mActivity;
     private Dialog mDialog;
     private Builder mBuilder;
-
+    private View.OnClickListener mClickListener;
 
     private static FancyAlert getInstance(Builder builder, Activity act) {
         FancyAlert dialog = new FancyAlert(act);
@@ -49,12 +50,17 @@ public class FancyAlert extends Dialog implements
         if (mBuilder.mTitle != null) ((TextView)findViewById(R.id.title)).setText(mBuilder.mTitle);
         if (mBuilder.mMessage != null) ((TextView)findViewById(R.id.message)).setText(mBuilder.mMessage);
         if (mBuilder.mClickMessage != null) ((Button)findViewById(R.id.click_btn)).setText(mBuilder.mClickMessage);
-        if (mBuilder.mClick != null) (findViewById(R.id.click_btn)).setOnClickListener(mBuilder.mClick);
+        if (mBuilder.mClick != null) mClickListener = mBuilder.mClick;
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            case R.id.click_btn:
+                if (mClickListener != null) {
+                    mClickListener.onClick(v);
+                }
+                break;
             default:
                 break;
         }

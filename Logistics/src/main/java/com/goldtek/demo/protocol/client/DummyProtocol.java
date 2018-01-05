@@ -1,6 +1,7 @@
 package com.goldtek.demo.protocol.client;
 
 import android.graphics.Bitmap;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
@@ -12,10 +13,12 @@ import com.goldtek.demo.protocol.client.IClientProtocol;
 
 public class DummyProtocol implements IClientProtocol {
     private final Handler mHandler;
+    private final String mCmd;
     private Thread mThread;
 
-    public DummyProtocol(Handler h) {
+    public DummyProtocol(Handler h, String cmd) {
         mHandler = h;
+        mCmd = cmd;
     }
 
     private boolean m_bInterrupt = false;
@@ -36,7 +39,23 @@ public class DummyProtocol implements IClientProtocol {
                         e.printStackTrace();
                     }
                     //Log.i("terry", "thread send msg");
-                    if (m_bProcess) mHandler.sendMessage(new Message());
+                    if (m_bProcess) {
+                        Message msg = mHandler.obtainMessage();
+                        Bundle b = new Bundle();
+                        switch (mCmd) {
+                            case CMDTYPE.REG:
+                                b.putString(Hndl_MSGTYPE, MSGTYPE.RECV);
+                                b.putString(Hndl_MSG, "<GOLDTEK><info>Fred_0</info><result>1</result></GOLDTEK>");
+                                break;
+                            case CMDTYPE.LOGIN:
+                                b.putString(Hndl_MSGTYPE, MSGTYPE.RECV);
+                                b.putString(Hndl_MSG, "<GOLDTEK><info>LOGIN_DONE</info><result>Fred 100%</result></GOLDTEK>");
+                                break;
+                        }
+
+                        msg.setData(b);
+                        mHandler.sendMessage(msg);
+                    }
                     m_bProcess = false;
                 }
             }

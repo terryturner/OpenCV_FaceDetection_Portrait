@@ -37,9 +37,9 @@ public class ServerDialogFragment extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         View view = getActivity().getLayoutInflater().inflate(R.layout.server_setting_view, null);
-        TextView recognizeServer = view.findViewById(R.id.RecognizeServer);
+        final TextView recognizeServer = view.findViewById(R.id.RecognizeServer);
         recognizeServer.setText(mRecognizeAddr);
-        TextView palmServer = view.findViewById(R.id.PalmServer);
+        final TextView palmServer = view.findViewById(R.id.PalmServer);
         palmServer.setText(mPalmAddr);
 
         return new AlertDialog.Builder(getActivity())
@@ -49,7 +49,12 @@ public class ServerDialogFragment extends DialogFragment {
                 .setPositiveButton(R.string.btn_ok,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
+                                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
+                                SharedPreferences.Editor editor = sharedPrefs.edit();
+                                editor.putString(KEY_SERVER_RECOGNIZE, recognizeServer.getText().toString());
+                                editor.putString(KEY_SERVER_PALM, palmServer.getText().toString());
+                                editor.commit();
                             }
                         }
                 )

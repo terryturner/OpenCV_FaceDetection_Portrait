@@ -107,6 +107,7 @@ public class GtClient implements IClientProtocol {
     private class Listener extends Thread implements Runnable {
         private boolean bInterrupt = false;
         private boolean bIsConnect = false;
+        private int iRetryCount = 0;
 
         @Override
         public void run() {
@@ -118,6 +119,7 @@ public class GtClient implements IClientProtocol {
                     break;
                 else {
                     Disconnecting();
+                    iRetryCount++;
                     callback_Status(false);
                     try {
                         Thread.sleep(5000);
@@ -152,11 +154,9 @@ public class GtClient implements IClientProtocol {
                                 }
 
                             }
-                        } catch (InterruptedException e) {
-                            Log.e(TAG, "InterruptedException");
-                            callback_Error(e.getClass().getCanonicalName());
                         } catch (Exception e) {
                             e.printStackTrace();
+                            Log.e(TAG, "Listener read Exception");
                             callback_Error(e.getClass().getCanonicalName());
                         }
 
@@ -164,6 +164,7 @@ public class GtClient implements IClientProtocol {
 
                 } catch (IOException e) {
                     e.printStackTrace();
+                    Log.e(TAG, "Listener IOException");
                     callback_Error(e.getClass().getCanonicalName());
                 }
             }
@@ -195,8 +196,7 @@ public class GtClient implements IClientProtocol {
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
-                        Log.e(TAG, e.getLocalizedMessage());
-
+                        Log.e(TAG, "Sender IOException");
                         callback_Error(e.getClass().getCanonicalName());
                     }
                     btsPackets = null;
@@ -287,7 +287,7 @@ public class GtClient implements IClientProtocol {
         Message msg = m_Handler.obtainMessage();
         Bundle b = new Bundle();
         b.putString(Hndl_MSGTYPE, MSGTYPE.STATUS);
-        b.putString(Hndl_MSG, (isConnectedNow ? "1" : "-1"));
+        b.putString(Hndl_MSG, (isConnectedNow ? RESULT.SUCCESS : RESULT.FAIL));
         msg.setData(b);
         m_Handler.sendMessage(msg);
     }

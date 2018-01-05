@@ -9,13 +9,14 @@
     <string name="btn_register">Register</string>
     <string name="btn_identify">Identify</string>
     <string name="btn_setting">Setting</string>
-    <string name="panel_pass">Pass</string>
-    <string name="panel_fail">Fail</string>
+    <string name="dialog_pass">Pass</string>
+    <string name="dialog_fail">Fail</string>
 
     <!-- Toast Messages -->
     <string name="camera_not_found">No camera harware found</string>
     <string name="take_photo_help">Touch anywhere on screen to take picture</string>
 
+    <string name="unreachable_recognition_server">Cannot Connect to Server!</string>
     <string name="permission_camera_rationale">Access to the camera is needed for detection</string>
     <string name="no_camera_permission">This application cannot run because it does not have the camera permission.  The application will now exit.</string>
     <string name="low_storage_error">Face detector dependencies cannot be downloaded due to low device storage</string>

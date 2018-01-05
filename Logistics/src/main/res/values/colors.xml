@@ -10,4 +10,7 @@
     <color name="metal_bluegrey_800">#37474F</color>
     <color name="transparentDarkGrey">#A4000000</color>
     <color name="transparentLightGrey">#30000000</color>
+    <color name="fancyPanelStart">#FFAB91</color>
+    <color name="fancyPanelCenter">#FF5722</color>
+    <color name="fancyPanelEnd">#DD2C00</color>
 </resources>

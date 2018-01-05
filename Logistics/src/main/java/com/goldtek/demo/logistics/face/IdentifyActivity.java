@@ -3,11 +3,13 @@ package com.goldtek.demo.logistics.face;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.WindowManager;
@@ -41,6 +43,8 @@ import com.goldtek.demo.protocol.client.DummyProtocol;
 import com.goldtek.demo.protocol.client.GtClient;
 import com.goldtek.demo.protocol.client.IClientProtocol;
 
+import static com.goldtek.demo.logistics.face.dialog.ServerDialogFragment.KEY_SERVER_RECOGNIZE;
+
 public class IdentifyActivity extends Activity implements CvCameraViewListener2 {
 
     private static final String    TAG                 = "Identify";
@@ -71,6 +75,8 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
     private Bitmap                 mCacheBitmap;
     private IClientProtocol        mProtocol;
 
+    private String                 mServerAddr         = null;
+
     private static class MainHandler extends Handler {
         private final WeakReference<IdentifyActivity> mActivity;
 
@@ -91,7 +97,10 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
                     activity.onIdentify(szResult);
                 }
             } else if (activity != null && szMsgType.equalsIgnoreCase(IClientProtocol.MSGTYPE.ERR)) {
-                Toast.makeText(activity, szMsg, Toast.LENGTH_LONG).show();
+                if (!activity.mIdentifiedDone) Toast.makeText(activity, szMsg, Toast.LENGTH_LONG).show();
+            } else if (activity != null && szMsgType.equalsIgnoreCase(IClientProtocol.MSGTYPE.STATUS) &&
+                    szMsg.equalsIgnoreCase(IClientProtocol.RESULT.FAIL)) {
+                if (!activity.mIdentifiedDone) Toast.makeText(activity, activity.getString(R.string.unreachable_recognition_server), Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -175,6 +184,9 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(org.opencv.samples.facedetect.R.id.fd_activity_surface_view);
         mOpenCvCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        mServerAddr = sharedPrefs.getString(KEY_SERVER_RECOGNIZE, "127.0.0.1");
     }
 
     @Override
@@ -273,12 +285,14 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
             {
                 Core.flip(tempMat, tempMat, 1);
                 Utils.matToBitmap(tempMat, mCacheBitmap);
+                Bitmap resized = Bitmap.createScaledBitmap(mCacheBitmap, 200, 300, true);
                 if(mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing() &&
-                        !mProtocol.sendImage(String.format("%s_%d", RegisterID, System.currentTimeMillis()), mCacheBitmap)) {
+                        !mProtocol.sendImage(String.format("login_%d", System.currentTimeMillis()), resized)) {
                     Release();
                     // TODO: error happened!
                     //CreateNew();
                 }
+                resized.recycle();
             }
 
             if (facesArray.length > 0) tempMat.release();
@@ -314,13 +328,13 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
     private void onIdentify(String name) {
         Log.i(TAG, "onIdentify " + mIdentifiedFrame + ": " + name);
 
-        if (mIdentifiedFrame >= 10) {
+        if (mIdentifiedFrame >= 10 || mProtocol == null) {
+            mIdentifiedDone = true;
             Intent returnIntent = new Intent();
             setResult(Activity.RESULT_CANCELED, returnIntent);
             finish();
-        } else if (mProtocol == null) {
-            finish();
-        } else if (!name.equalsIgnoreCase("UNKNOWN")) {
+        } else if (!name.equalsIgnoreCase(IClientProtocol.RESULT.UNKNOWN)) {
+            mIdentifiedDone = true;
             Intent returnIntent = new Intent();
             returnIntent.putExtra(KEY_NAME, name);
             setResult(Activity.RESULT_OK, returnIntent);
@@ -329,20 +343,14 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         mIdentifiedFrame++;
     }
 
-    private String ServerIP     = "192.168.1.31";
-    private String RegisterName = "";
-    private String RegisterID   = "";
-
     public void CreateNew() {
 
         if(mProtocol == null) {
             if (FLAG_DEBUG) mProtocol = new DummyProtocol(mHandler, IClientProtocol.CMDTYPE.LOGIN);
             else mProtocol = new GtClient
-                    (mHandler, -1,
-                    ServerIP,
+                    (mHandler, -1, mServerAddr,
                     IClientProtocol.CMDTYPE.LOGIN,
-                    RegisterName,
-                    RegisterID);
+                    "", "");
             mProtocol.start();
         }
     }

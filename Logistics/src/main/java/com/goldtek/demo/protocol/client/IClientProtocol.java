@@ -20,6 +20,7 @@ public interface IClientProtocol {
     class RESULT {
         public static final String SUCCESS = "1";
         public static final String FAIL = "-1";
+        public static final String UNKNOWN = "UNKNOWN";
     }
     String Hndl_MSG             = "MSG";
     String Hndl_MSGTYPE         = "MSGTYPE";

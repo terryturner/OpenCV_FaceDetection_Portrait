@@ -3,11 +3,13 @@ package com.goldtek.demo.logistics.face;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.WindowManager;
@@ -41,6 +43,8 @@ import com.goldtek.demo.protocol.client.DummyProtocol;
 import com.goldtek.demo.protocol.client.GtClient;
 import com.goldtek.demo.protocol.client.IClientProtocol;
 
+import static com.goldtek.demo.logistics.face.dialog.ServerDialogFragment.KEY_SERVER_RECOGNIZE;
+
 public class RegisterActivity extends Activity implements CvCameraViewListener2 {
 
     private static final String    TAG                 = "Register";
@@ -64,6 +68,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
     private float                  mRelativeFaceSize   = 0.2f;
     private int                    mAbsoluteFaceSize   = 0;
     private int                    mSendFrame          = 0;
+    private boolean                mRegisterDone       = false;
 
     private CameraBridgeViewBase   mOpenCvCameraView;
     private RegisterBox            mRegisterBox;
@@ -71,6 +76,10 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
     private MainHandler            mHandler            = new MainHandler(this);
     private Bitmap                 mCacheBitmap;
     private IClientProtocol        mProtocol;
+
+    private String                 mServerAddr         = null;
+    private String                 mRegisterName       = null;
+    private String                 mRegisterID         = null;
 
     private static class MainHandler extends Handler {
         private final WeakReference<RegisterActivity> mActivity;
@@ -89,7 +98,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
                 String szResult = CClientConnection.getTagValue(szMsg, IClientProtocol.XML.RESULT);
 
                 if (szInfo.equalsIgnoreCase(IClientProtocol.CMDTYPE.REG_DONE)) {
-                    // TODO: check register process & hint to user
+                    activity.mRegisterDone = true;
                     Intent returnIntent = new Intent();
                     if (szResult.equalsIgnoreCase(IClientProtocol.RESULT.SUCCESS))
                         activity.setResult(Activity.RESULT_OK, returnIntent);
@@ -100,10 +109,12 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
                         szResult.equalsIgnoreCase(IClientProtocol.RESULT.SUCCESS)) {
                     activity.onRegister();
                 }
-                // TODO: if send image fail, update UI?
             } else if (activity != null && szMsgType.equalsIgnoreCase(IClientProtocol.MSGTYPE.ERR)) {
-                Toast.makeText(activity, szMsg, Toast.LENGTH_LONG).show();
+                if (!activity.mRegisterDone) Toast.makeText(activity, szMsg, Toast.LENGTH_LONG).show();
                 activity.finish();
+            } else if (activity != null && szMsgType.equalsIgnoreCase(IClientProtocol.MSGTYPE.STATUS) &&
+                    szMsg.equalsIgnoreCase(IClientProtocol.RESULT.FAIL)) {
+                if (!activity.mRegisterDone) Toast.makeText(activity, activity.getString(R.string.unreachable_recognition_server), Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -175,7 +186,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        RegisterID = RegisterName = getIntent().getStringExtra(KEY_NAME);
+        mRegisterID = mRegisterName = getIntent().getStringExtra(KEY_NAME);
 
         Log.i(TAG, getDeviceName());
         if (getDeviceName().contains("fc11501")) {
@@ -190,6 +201,9 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         mOpenCvCameraView.setCvCameraViewListener(this);
 
         mRegisterBox = findViewById(R.id.overlay_surface_view);
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        mServerAddr = sharedPrefs.getString(KEY_SERVER_RECOGNIZE, "127.0.0.1");
     }
 
     @Override
@@ -301,12 +315,14 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
             {
                 Core.flip(tempMat, tempMat, 1);
                 Utils.matToBitmap(tempMat, mCacheBitmap);
+                Bitmap resized = Bitmap.createScaledBitmap(mCacheBitmap, 200, 300, true);
                 if(mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing() &&
-                        !mProtocol.sendImage(String.format("%s_%d", RegisterID, System.currentTimeMillis()), mCacheBitmap)) {
+                        !mProtocol.sendImage(String.format("%s_%d", mRegisterID, System.currentTimeMillis()), resized)) {
                     Release();
                     // TODO: error happened! tip some msg for user
                     finish();
                 }
+                resized.recycle();
             }
 
             if (facesArray.length > 0) tempMat.release();
@@ -386,19 +402,12 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
 
     }
 
-    private String ServerIP     = "192.168.1.31";
-    private String RegisterName = "Fred";
-    private String RegisterID   = "Fred";
-
     public void CreateNew() {
         if(mProtocol == null) {
             if (FLAG_DEBUG) mProtocol = new DummyProtocol(mHandler, IClientProtocol.CMDTYPE.REG);
             else mProtocol = new GtClient(
-                    mHandler, -1,
-                    ServerIP,
-                    IClientProtocol.CMDTYPE.REG,
-                    RegisterName,
-                    RegisterID);
+                    mHandler, -1, mServerAddr,
+                    IClientProtocol.CMDTYPE.REG, mRegisterName, mRegisterID);
             mProtocol.start();
         }
     }

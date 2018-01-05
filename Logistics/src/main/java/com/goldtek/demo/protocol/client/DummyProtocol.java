@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 
 import com.goldtek.demo.protocol.client.IClientProtocol;
 
@@ -73,6 +74,7 @@ public class DummyProtocol implements IClientProtocol {
     @Override
     public boolean sendImage(String szName, Bitmap bmp) {
         m_bProcess = true;
+        Log.i("terry", "dbg for bmp: " + bmp.getByteCount());
         return true;
     }
 

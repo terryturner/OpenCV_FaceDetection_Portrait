@@ -6,10 +6,10 @@
     android:layout_height="match_parent" >
 
     <org.opencv.android.JavaCameraView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:id="@+id/fd_activity_surface_view"
-        opencv:camera_id="back"
+        opencv:camera_id="front"
         opencv:show_fps="true" />
 
     <com.goldtek.demo.logistics.face.RegisterBox
@@ -32,16 +32,16 @@
         android:paddingBottom="0dp"
         android:progressDrawable="@drawable/progress_bar"
         android:id="@+id/progressBar"
-        android:visibility="visible" />
+        android:visibility="invisible" />
 
     <com.github.ybq.android.spinkit.SpinKitView
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/spin_kit"
         style="@style/SpinKitView.Small.WanderingCubes"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="400dp"
+        android:layout_height="400dp"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:visibility="visible"
+        android:visibility="invisible"
         app:SpinKit_Color="@color/colorAccent" />
 </RelativeLayout>

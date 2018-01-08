@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import com.goldtek.demo.logistics.face.Utils;
 import com.goldtek.demo.protocol.client.IClientProtocol;
 
 /**
@@ -16,6 +17,7 @@ public class DummyProtocol implements IClientProtocol {
     private final Handler mHandler;
     private final String mCmd;
     private Thread mThread;
+    private Bitmap mBitmap;
 
     public DummyProtocol(Handler h, String cmd) {
         mHandler = h;
@@ -49,6 +51,8 @@ public class DummyProtocol implements IClientProtocol {
                                 b.putString(Hndl_MSG, "<GOLDTEK><info>Fred_0</info><result>1</result></GOLDTEK>");
                                 break;
                             case CMDTYPE.LOGIN:
+                                if (mBitmap != null) Utils.saveTempBitmap(mBitmap);
+
                                 b.putString(Hndl_MSGTYPE, MSGTYPE.RECV);
                                 b.putString(Hndl_MSG, "<GOLDTEK><info>LOGIN_DONE</info><result>Fred 100%</result></GOLDTEK>");
                                 break;
@@ -66,15 +70,18 @@ public class DummyProtocol implements IClientProtocol {
 
     @Override
     public void onStop() {
+        if (mBitmap != null) mBitmap.recycle();
         if (mThread != null) mThread.interrupt();
         m_bInterrupt = true;
         mThread = null;
     }
 
     @Override
-    public boolean sendImage(String szName, Bitmap bmp) {
+    public synchronized boolean sendImage(String szName, Bitmap bmp) {
         m_bProcess = true;
-        Log.i("terry", "dbg for bmp: " + bmp.getByteCount());
+        //Log.i("terry", "dbg for bmp: " + bmp.getByteCount());
+        //mBitmap = bmp.copy(bmp.getConfig(), true);
+
         return true;
     }
 

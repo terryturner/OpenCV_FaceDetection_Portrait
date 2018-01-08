@@ -308,16 +308,25 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2,
             if (facesArray.length > 0) {
                 isExistFace = true;
                 tempMat = mRgba.clone();
+
+                for (Rect rect: facesArray) {
+                    //Log.i("terry", String.format("face: %d %d, %d %d", rect.x, rect.y, rect.width, rect.height));
+                    Imgproc.rectangle(mRgba, rect.tl(), rect.br(), FACE_RECT_COLOR, 3);
+                }
+//                TestTask task = new TestTask(mRgba);
+//                task.execute(facesArray);
             }
-            for (Rect rect: facesArray)
-                Imgproc.rectangle(mRgba, rect.tl(), rect.br(), FACE_RECT_COLOR, 3);
 
 
             if (isExistFace)
             {
                 Core.flip(tempMat, tempMat, 1);
-                Utils.matToBitmap(tempMat, mCacheBitmap);
-                Bitmap resized = Bitmap.createScaledBitmap(mCacheBitmap, 480, 640, true);
+
+                //Utils.matToBitmap(tempMat, mCacheBitmap);
+                //Bitmap resized = Bitmap.createScaledBitmap(mCacheBitmap, 480, 640, true);
+                Mat cropped = new Mat(tempMat, facesArray[0]);
+                Bitmap resized = Bitmap.createBitmap(cropped.width(), cropped.height(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(cropped, resized);
                 if(mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing() &&
                         !mProtocol.sendImage(String.format("login_%d", System.currentTimeMillis()), resized)) {
                     Release();
@@ -325,10 +334,10 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2,
                     //CreateNew();
                 }
                 resized.recycle();
+                cropped.release();
+                tempMat.release();
                 mHandler.sendEmptyMessage(SET_PROGRESS_VISIBLE);
             }
-
-            if (facesArray.length > 0) tempMat.release();
         }
         tempMat = mRgba.t();
         Core.flip(tempMat, mRgba, mCameraFront ? 1 : -1);

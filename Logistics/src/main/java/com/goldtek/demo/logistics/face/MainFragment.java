@@ -103,7 +103,7 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                         .setTitle(title)
                         .setMessage(getString(R.string.dialog_pass))
                         .setClickMessage(getString(R.string.btn_ok))
-                        .setOnClickListener(this)
+                        .setOnClickListener((requestCode == REQUEST_IDENTIFY) ? this : null)
                         .show(getActivity());
                 } else {
                     if (requestCode == REQUEST_REGISTER) title = "Register";
@@ -125,12 +125,6 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         switch (view.getId()) {
             case R.id.Register:
                 showDialog(PROFILE_CREATE);
-//                new FancyAlert.Builder()
-//                        .setIconResource(R.drawable.fail_red)
-//                        .setTitle("test")
-//                        .setMessage(getString(R.string.dialog_fail))
-//                        .setClickMessage(getString(R.string.btn_ok))
-//                        .show(getActivity());
                 break;
             case R.id.Identify:
                 startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);

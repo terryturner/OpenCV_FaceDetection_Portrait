@@ -62,4 +62,14 @@
             app:cpb_selectorIdle="@drawable/main_btn_selector"
             app:cpb_textIdle="@string/btn_setting" />
     </RelativeLayout>
+
+    <!--<com.github.ybq.android.spinkit.SpinKitView-->
+        <!--xmlns:app="http://schemas.android.com/apk/res-auto"-->
+        <!--android:id="@+id/spin_kit"-->
+        <!--style="@style/SpinKitView.Small.Wave"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:layout_weight="1"-->
+        <!--android:layout_gravity="center"-->
+        <!--app:SpinKit_Color="@color/colorAccent" />-->
 </LinearLayout>

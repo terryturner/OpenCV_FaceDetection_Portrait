@@ -5,14 +5,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.PorterDuff;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -38,6 +42,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 
+import com.github.ybq.android.spinkit.SpinKitView;
 import com.goldtek.demo.protocol.client.CClientConnection;
 import com.goldtek.demo.protocol.client.DummyProtocol;
 import com.goldtek.demo.protocol.client.GtClient;
@@ -45,11 +50,13 @@ import com.goldtek.demo.protocol.client.IClientProtocol;
 
 import static com.goldtek.demo.logistics.face.dialog.ServerDialogFragment.KEY_SERVER_RECOGNIZE;
 
-public class IdentifyActivity extends Activity implements CvCameraViewListener2 {
+public class IdentifyActivity extends Activity implements CvCameraViewListener2, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String    TAG                 = "Identify";
     private static final Scalar    FACE_RECT_COLOR     = new Scalar(0, 255, 0, 255);
     private static final boolean   FLAG_DEBUG          = false;
+    private static final int       SET_PROGRESS_VISIBLE     = 0x110;
+    private static final int       SET_PROGRESS_INVISIBLE   = 0x111;
     public static final String     KEY_NAME            = "identify_name";
     public static final int        JAVA_DETECTOR       = 0;
     public static final int        NATIVE_DETECTOR     = 1;
@@ -70,12 +77,15 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
     private boolean                mIdentifiedDone     = false;
 
     private CameraBridgeViewBase   mOpenCvCameraView;
+    private ProgressBar            mProgress;
+    private SpinKitView            mSpinKit;
 
     private MainHandler            mHandler            = new MainHandler(this);
     private Bitmap                 mCacheBitmap;
     private IClientProtocol        mProtocol;
 
     private String                 mServerAddr         = null;
+
 
     private static class MainHandler extends Handler {
         private final WeakReference<IdentifyActivity> mActivity;
@@ -87,21 +97,32 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         @Override
         public void handleMessage(Message msg) {
             IdentifyActivity activity = mActivity.get();
-            String szMsgType = msg.getData().getString(IClientProtocol.Hndl_MSGTYPE, "");
-            String szMsg = msg.getData().getString(IClientProtocol.Hndl_MSG, "");
-            if (activity != null && szMsgType.equalsIgnoreCase(IClientProtocol.MSGTYPE.RECV)) {
-                String szInfo = CClientConnection.getTagValue(szMsg, IClientProtocol.XML.INFO);
-                String szResult = CClientConnection.getTagValue(szMsg, IClientProtocol.XML.RESULT);
+            switch (msg.what) {
+                case SET_PROGRESS_VISIBLE:
+                    activity.setProgress(true);
+                    break;
+                case SET_PROGRESS_INVISIBLE:
+                    activity.setProgress(false);
+                    break;
+                default:
+                    String szMsgType = msg.getData().getString(IClientProtocol.Hndl_MSGTYPE, "");
+                    String szMsg = msg.getData().getString(IClientProtocol.Hndl_MSG, "");
+                    if (activity != null && szMsgType.equalsIgnoreCase(IClientProtocol.MSGTYPE.RECV)) {
+                        String szInfo = CClientConnection.getTagValue(szMsg, IClientProtocol.XML.INFO);
+                        String szResult = CClientConnection.getTagValue(szMsg, IClientProtocol.XML.RESULT);
 
-                if (szInfo.equalsIgnoreCase(IClientProtocol.CMDTYPE.LOGIN_DONE)) {
-                    activity.onIdentify(szResult);
-                }
-            } else if (activity != null && szMsgType.equalsIgnoreCase(IClientProtocol.MSGTYPE.ERR)) {
-                if (!activity.mIdentifiedDone) Toast.makeText(activity, szMsg, Toast.LENGTH_LONG).show();
-            } else if (activity != null && szMsgType.equalsIgnoreCase(IClientProtocol.MSGTYPE.STATUS) &&
-                    szMsg.equalsIgnoreCase(IClientProtocol.RESULT.FAIL)) {
-                if (!activity.mIdentifiedDone) Toast.makeText(activity, activity.getString(R.string.unreachable_recognition_server), Toast.LENGTH_SHORT).show();
+                        if (szInfo.equalsIgnoreCase(IClientProtocol.CMDTYPE.LOGIN_DONE)) {
+                            activity.onIdentify(szResult);
+                        }
+                    } else if (activity != null && szMsgType.equalsIgnoreCase(IClientProtocol.MSGTYPE.ERR)) {
+                        if (!activity.mIdentifiedDone) Toast.makeText(activity, szMsg, Toast.LENGTH_LONG).show();
+                    } else if (activity != null && szMsgType.equalsIgnoreCase(IClientProtocol.MSGTYPE.STATUS) &&
+                            szMsg.equalsIgnoreCase(IClientProtocol.RESULT.FAIL)) {
+                        if (!activity.mIdentifiedDone) Toast.makeText(activity, activity.getString(R.string.unreachable_recognition_server), Toast.LENGTH_SHORT).show();
+                    }
+                    break;
             }
+
         }
     }
 
@@ -185,6 +206,11 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         mOpenCvCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
 
+        mSpinKit = findViewById(R.id.spin_kit);
+        mProgress = findViewById(R.id.progressBar);
+        mProgress.getIndeterminateDrawable().setColorFilter(getResources()
+                .getColor(R.color.colorAccent), PorterDuff.Mode.SRC_IN);
+
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         mServerAddr = sharedPrefs.getString(KEY_SERVER_RECOGNIZE, "127.0.0.1");
     }
@@ -215,15 +241,21 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         CreateNew();
     }
 
+    @Override
     public void onDestroy() {
         super.onDestroy();
         mOpenCvCameraView.disableView();
     }
 
+    @Override
+    public void onRefresh() {
+
+    }
+
     public void onCameraViewStarted(int width, int height) {
         mGray = new Mat();
         mRgba = new Mat();
-        mCacheBitmap = Bitmap.createBitmap(height, width, Bitmap.Config.ARGB_8888);
+        if (width > 0 && height > 0) mCacheBitmap = Bitmap.createBitmap(height, width, Bitmap.Config.ARGB_8888);
     }
 
     public void onCameraViewStopped() {
@@ -285,7 +317,7 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
             {
                 Core.flip(tempMat, tempMat, 1);
                 Utils.matToBitmap(tempMat, mCacheBitmap);
-                Bitmap resized = Bitmap.createScaledBitmap(mCacheBitmap, 200, 300, true);
+                Bitmap resized = Bitmap.createScaledBitmap(mCacheBitmap, 480, 640, true);
                 if(mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing() &&
                         !mProtocol.sendImage(String.format("login_%d", System.currentTimeMillis()), resized)) {
                     Release();
@@ -293,6 +325,7 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
                     //CreateNew();
                 }
                 resized.recycle();
+                mHandler.sendEmptyMessage(SET_PROGRESS_VISIBLE);
             }
 
             if (facesArray.length > 0) tempMat.release();
@@ -300,8 +333,6 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         tempMat = mRgba.t();
         Core.flip(tempMat, mRgba, mCameraFront ? 1 : -1);
         tempMat.release();
-
-
 
         return mRgba;
     }
@@ -325,6 +356,11 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         }
     }
 
+    private void setProgress(boolean visible) {
+        mProgress.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
+        mSpinKit.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
+    }
+
     private void onIdentify(String name) {
         Log.i(TAG, "onIdentify " + mIdentifiedFrame + ": " + name);
 
@@ -341,6 +377,7 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
             finish();
         }
         mIdentifiedFrame++;
+        mHandler.sendEmptyMessage(SET_PROGRESS_INVISIBLE);
     }
 
     public void CreateNew() {

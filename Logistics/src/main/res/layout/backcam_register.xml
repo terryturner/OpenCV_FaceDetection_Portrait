@@ -22,6 +22,29 @@
         widget:DistanceRatioX="0.3"
         widget:DistanceRatioY="0.25" />
 
+    <ProgressBar
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:indeterminate="true"
+        android:layout_alignParentBottom="true"
+        android:paddingTop="0dp"
+        android:paddingBottom="0dp"
+        android:progressDrawable="@drawable/progress_bar"
+        android:id="@+id/progressBar"
+        android:visibility="invisible" />
+
+    <com.github.ybq.android.spinkit.SpinKitView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/spin_kit"
+        style="@style/SpinKitView.Small.WanderingCubes"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:visibility="invisible"
+        app:SpinKit_Color="@color/colorAccent" />
+
     <FrameLayout
         android:layout_width="360dp"
         android:layout_height="480dp"

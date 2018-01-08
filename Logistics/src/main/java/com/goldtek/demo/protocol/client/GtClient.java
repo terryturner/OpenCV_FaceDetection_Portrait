@@ -249,6 +249,8 @@ public class GtClient implements IClientProtocol {
         try {
             Log.e(TAG, "Trying Connecting");
             m_socket = new Socket();
+            m_socket.setTcpNoDelay(true);
+            m_socket.setSendBufferSize(10*1024);
             m_socket.connect(new InetSocketAddress(m_szSvrIP, m_nPort), TIMEOUT_CONNECT);
 
             m_bRunning = true;

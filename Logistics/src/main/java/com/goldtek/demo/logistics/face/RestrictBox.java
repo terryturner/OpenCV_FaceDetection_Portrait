@@ -9,7 +9,6 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 
 import org.opencv.core.Rect;
@@ -18,7 +17,7 @@ import org.opencv.core.Rect;
  * Created by Terry on 2017/12/28 0028.
  */
 
-public class RegisterBox extends View {
+public class RestrictBox extends View {
     private Paint mClrPaint = new Paint();
     private Paint mBoarderPaint = new Paint();
     private final float mCenterRatioX;
@@ -27,20 +26,20 @@ public class RegisterBox extends View {
     private final float mDistanceRatioY;
     private final Rect mRect;
 
-    public RegisterBox(Context context, AttributeSet attrs) {
+    public RestrictBox(Context context, AttributeSet attrs) {
         super(context, attrs);
         TypedArray a = context.getTheme().obtainStyledAttributes(
                 attrs,
-                R.styleable.RegisterBox,
+                R.styleable.RestrictBox,
                 0, 0);
 
         try {
-            a.getBoolean(R.styleable.RegisterBox_showText, false);
-            a.getInteger(R.styleable.RegisterBox_labelPosition, 0);
-            mCenterRatioX = a.getFloat(R.styleable.RegisterBox_CenterRatioX, 1);
-            mCenterRatioY = a.getFloat(R.styleable.RegisterBox_CenterRatioY, 1);
-            mDistanceRatioX = a.getFloat(R.styleable.RegisterBox_DistanceRatioX, 1);
-            mDistanceRatioY = a.getFloat(R.styleable.RegisterBox_DistanceRatioY, 1);
+            a.getBoolean(R.styleable.RestrictBox_showText, false);
+            a.getInteger(R.styleable.RestrictBox_labelPosition, 0);
+            mCenterRatioX = a.getFloat(R.styleable.RestrictBox_CenterRatioX, 1);
+            mCenterRatioY = a.getFloat(R.styleable.RestrictBox_CenterRatioY, 1);
+            mDistanceRatioX = a.getFloat(R.styleable.RestrictBox_DistanceRatioX, 1);
+            mDistanceRatioY = a.getFloat(R.styleable.RestrictBox_DistanceRatioY, 1);
         } finally {
             a.recycle();
         }

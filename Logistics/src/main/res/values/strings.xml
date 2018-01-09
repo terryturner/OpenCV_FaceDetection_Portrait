@@ -12,6 +12,7 @@
     <string name="dialog_pass">Pass</string>
     <string name="dialog_fail">Fail</string>
 
+
     <!-- Toast Messages -->
     <string name="camera_not_found">No camera harware found</string>
     <string name="take_photo_help">Touch anywhere on screen to take picture</string>

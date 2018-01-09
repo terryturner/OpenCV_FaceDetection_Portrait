@@ -1,9 +1,8 @@
 package com.goldtek.demo.logistics.face;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -14,26 +13,29 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.Toast;
 
 import com.goldtek.demo.logistics.face.dialog.FancyAlert;
 import com.goldtek.demo.logistics.face.dialog.ProfileDialogFragment;
 import com.goldtek.demo.logistics.face.dialog.ServerDialogFragment;
+import com.goldtek.demo.logistics.face.dialog.UsageWarning;
+import com.marcoscg.easylicensesdialog.EasyLicensesDialogCompat;
 
 /**
  * Created by Terry on 2017/12/18 0018.
  */
 
-public class MainFragment extends Fragment implements View.OnClickListener {
+public class MainFragment extends Fragment implements View.OnClickListener, DialogInterface.OnClickListener {
     private String mArgument ;
     public static final String ARGUMENT ="argument";
     public static final String RESPONSE = "response";
     public static final String PROFILE_CREATE = "profile_create_dialog";
     public static final String SETTING_SERVER = "config_server_dialog";
+    public static final String USAGE_WARNING = "usage_warning_dialog";
     public static final int REQUEST_PROFILE_CREATE = 0X110;
-    public static final int REQUEST_REGISTER = 0X111;
-    public static final int REQUEST_IDENTIFY = 0X112;
+    public static final int REQUEST_USAGE_WARNING = 0X111;
+    public static final int REQUEST_REGISTER = 0X112;
+    public static final int REQUEST_IDENTIFY = 0X113;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -124,10 +126,18 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.Register:
-                showDialog(PROFILE_CREATE);
+                //showDialog(PROFILE_CREATE);
+                new UsageWarning(getActivity(), REQUEST_PROFILE_CREATE)
+                        .setTitle("Usage Notices")
+                        .setPositiveButton(android.R.string.ok, this)
+                        .show();
                 break;
             case R.id.Identify:
-                startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);
+                //startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);
+                new UsageWarning(getActivity(), REQUEST_IDENTIFY)
+                        .setTitle("Usage Notices")
+                        .setPositiveButton(android.R.string.ok, this)
+                        .show();
                 break;
             case R.id.SettingServer:
                 showDialog(SETTING_SERVER);
@@ -137,6 +147,18 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                 if(m_objOpen != null){
                     m_objOpen.iocontrollerOpen("Z01", m_objOpen.genMsgClientId());
                 }
+                break;
+        }
+    }
+
+    @Override
+    public void onClick(DialogInterface dialogInterface, int i) {
+        switch (i) {
+            case REQUEST_PROFILE_CREATE:
+                showDialog(PROFILE_CREATE);
+                break;
+            case REQUEST_IDENTIFY:
+                startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);
                 break;
         }
     }
@@ -158,6 +180,9 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                 break;
             case SETTING_SERVER:
                 newFragment = new ServerDialogFragment();
+                break;
+            case USAGE_WARNING:
+                break;
         }
 
         if (newFragment != null) {

@@ -1,5 +1,5 @@
 <resources>
-    <declare-styleable name="RegisterBox">
+    <declare-styleable name="RestrictBox">
         <attr name="showText" format="boolean" />
         <attr name="labelPosition" format="enum">
             <enum name="left" value="0"/>

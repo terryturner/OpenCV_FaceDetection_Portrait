@@ -12,7 +12,7 @@
         opencv:camera_id="front"
         opencv:show_fps="true" />
 
-    <com.goldtek.demo.logistics.face.RegisterBox
+    <com.goldtek.demo.logistics.face.RestrictBox
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/overlay_surface_view"

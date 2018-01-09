@@ -80,7 +80,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
     private CameraBridgeViewBase   mOpenCvCameraView;
     private ProgressBar            mProgress;
     private SpinKitView            mSpinKit;
-    private RegisterBox            mRegisterBox;
+    private RestrictBox            mRestrictBox;
 
     private MainHandler            mHandler            = new MainHandler(this);
     private Bitmap                 mCacheBitmap;
@@ -224,7 +224,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         mProgress = findViewById(R.id.progressBar);
         mProgress.getIndeterminateDrawable().setColorFilter(getResources()
                 .getColor(R.color.colorAccent), PorterDuff.Mode.SRC_IN);
-        mRegisterBox = findViewById(R.id.overlay_surface_view);
+        mRestrictBox = findViewById(R.id.overlay_surface_view);
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         mServerAddr = sharedPrefs.getString(KEY_SERVER_RECOGNIZE, "127.0.0.1");
@@ -285,7 +285,6 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         Core.flip(tempMat, mRgba, mCameraFront ? -1 : 1);
         tempMat.release();
 
-
         if (mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing())
         {
             mGray = inputFrame.gray();
@@ -312,10 +311,10 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
                 mProtocol.start(mCacheBitmap);
             }
             */
-            int cx = (int) (mGray.cols() * mRegisterBox.getCenterRatioX());
-            int cy = (int) (mGray.rows() * mRegisterBox.getCenterRatioY());
-            int dx = (int) (mGray.cols() * mRegisterBox.getDistanceRatioX());
-            int dy = (int) (mGray.rows() * mRegisterBox.getDistanceRatioY());
+            int cx = (int) (mGray.cols() * mRestrictBox.getCenterRatioX());
+            int cy = (int) (mGray.rows() * mRestrictBox.getCenterRatioY());
+            int dx = (int) (mGray.cols() * mRestrictBox.getDistanceRatioX());
+            int dy = (int) (mGray.rows() * mRestrictBox.getDistanceRatioY());
 
             tempMat = mGray.submat(cy - dy, cy + dy, cx - dx, cx + dx);
             if (mNativeDetector != null) mNativeDetector.detect(tempMat, faces);
@@ -338,8 +337,14 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
             if (isExistFace)
             {
                 Core.flip(tempMat, tempMat, 1);
+
                 Utils.matToBitmap(tempMat, mCacheBitmap);
-                Bitmap resized = Bitmap.createScaledBitmap(mCacheBitmap, 480, 640, true);
+                //Bitmap resized = Bitmap.createScaledBitmap(mCacheBitmap, 480, 640, true);
+
+                Rect resizeRect = new Rect(facesArray[0].x - 50, facesArray[0].y - 50, facesArray[0].width + 100, facesArray[0].height + 100);
+                Mat cropped = new Mat(tempMat, resizeRect);
+                Bitmap resized = Bitmap.createBitmap(cropped.width(), cropped.height(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(cropped, resized);
                 if(mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing() &&
                         !mProtocol.sendImage(String.format("%s_%d", mRegisterID, System.currentTimeMillis()), resized)) {
                     Release();
@@ -347,10 +352,10 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
                     finish();
                 }
                 resized.recycle();
+                cropped.release();
+                tempMat.release();
                 mHandler.sendEmptyMessage(SET_PROGRESS_VISIBLE);
             }
-
-            if (facesArray.length > 0) tempMat.release();
         }
 
         tempMat = mRgba.t();

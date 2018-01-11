@@ -69,7 +69,7 @@
                 android:background="@drawable/btn_rounded_corner"
                 android:text="@string/btn_register"
                 android:textSize="18sp"
-                android:textColor="@color/white"/>
+                android:textColor="@color/textview_color"/>
         </RelativeLayout>
 
         <RelativeLayout
@@ -85,7 +85,7 @@
                 android:background="@drawable/btn_rounded_corner"
                 android:text="@string/btn_identify"
                 android:textSize="18sp"
-                android:textColor="@color/white"/>
+                android:textColor="@color/textview_color"/>
         </RelativeLayout>
 
         <RelativeLayout

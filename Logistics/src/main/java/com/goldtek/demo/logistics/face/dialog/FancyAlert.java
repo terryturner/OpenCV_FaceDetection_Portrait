@@ -25,6 +25,7 @@ public class FancyAlert extends Dialog implements
     private Activity mActivity;
     private Builder mBuilder;
     private View.OnClickListener mClickListener;
+    private int mEventID;
 
     private static FancyAlert getInstance(Builder builder, Activity act) {
         FancyAlert dialog = new FancyAlert(act);
@@ -51,6 +52,7 @@ public class FancyAlert extends Dialog implements
         if (mBuilder.mMessage != null) ((TextView)findViewById(R.id.message)).setText(mBuilder.mMessage);
         if (mBuilder.mClickMessage != null) ((Button)findViewById(R.id.click_btn)).setText(mBuilder.mClickMessage);
         if (mBuilder.mClick != null) mClickListener = mBuilder.mClick;
+        if (mBuilder.mEventId > 0) mEventID = mBuilder.mEventId;
 
         setCancelable(false);
         getWindow().setGravity(Gravity.CENTER);
@@ -61,6 +63,7 @@ public class FancyAlert extends Dialog implements
         switch (v.getId()) {
             case R.id.click_btn:
                 if (mClickListener != null) {
+                    v.setTag(mEventID);
                     mClickListener.onClick(v);
                 }
                 break;
@@ -72,6 +75,7 @@ public class FancyAlert extends Dialog implements
 
     public static class Builder {
         private int mIconRes = -1;
+        private int mEventId = -1;
         private String mTitle = null;
         private String mMessage = null;
         private String mClickMessage = null;
@@ -102,12 +106,13 @@ public class FancyAlert extends Dialog implements
             return this;
         }
 
-        public FancyAlert create(Activity act) {
+        public FancyAlert create(Activity act, int eventId) {
+            mEventId = eventId;
             return FancyAlert.getInstance(this, act);
         }
 
-        public FancyAlert show(Activity act) {
-            FancyAlert dialog = create(act);
+        public FancyAlert show(Activity act, int eventId) {
+            FancyAlert dialog = create(act, eventId);
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             dialog.show();
             return dialog;

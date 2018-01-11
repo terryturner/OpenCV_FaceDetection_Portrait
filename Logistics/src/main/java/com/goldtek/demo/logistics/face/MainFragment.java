@@ -1,7 +1,6 @@
 package com.goldtek.demo.logistics.face;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.MediaPlayer;
@@ -20,7 +19,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.goldtek.demo.logistics.face.dialog.AboutDialogFragment;
@@ -38,19 +36,20 @@ import java.io.IOException;
 
 public class MainFragment extends Fragment implements SurfaceHolder.Callback, MediaPlayer.OnPreparedListener ,View.OnClickListener, DialogInterface.OnClickListener {
     private static final String TAG = "MainFragment";
-    private static final String RAW_RESNAME = "demo3";
-    private static final String FILE_RESNAME = "demo3.mp4";
+    private static final String RAW_NAME = "demo3";
+    private static final String FILE_NAME = "demo3.mp4";
+    private static final String KEY_STATE ="main_fragment_state";
+    private static final String PROFILE_CREATE = "profile_create_dialog";
+    private static final String SETTING_SERVER = "config_server_dialog";
+    private static final String ABOUT = "about_dialog";
+    private static final String USAGE_WARNING = "usage_warning_dialog";
+    private static final int REQUEST_PROFILE_CREATE = 0X110;
+    private static final int REQUEST_REGISTER = 0X112;
+    private static final int REQUEST_IDENTIFY = 0X113;
+    private static final int REQUEST_OTHER = 0X199;
 
     public static final String ARGUMENT ="argument";
     public static final String RESPONSE = "response";
-    public static final String PROFILE_CREATE = "profile_create_dialog";
-    public static final String SETTING_SERVER = "config_server_dialog";
-    public static final String ABOUT = "about_dialog";
-    public static final String USAGE_WARNING = "usage_warning_dialog";
-    public static final int REQUEST_PROFILE_CREATE = 0X110;
-    public static final int REQUEST_REGISTER = 0X112;
-    public static final int REQUEST_IDENTIFY = 0X113;
-    public static final int REQUEST_OTHER = 0X199;
 
     private String mArgument ;
     private Uri mVideo_uri;
@@ -93,7 +92,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
     @Override
     public void onResume() {
         super.onResume();
-        if (m_bVideofile) {
+        if (m_bVideofile && getActivity().getIntent().getIntExtra(KEY_STATE, -1) < 0) {
             fadeButton(true);
         }
     }
@@ -109,8 +108,8 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
         view.findViewById(R.id.imgAbout).setOnClickListener(this);
         view.findViewById(R.id.imgLogo).setOnClickListener(this);
 
-        int checkExistence = getContext().getResources().getIdentifier(RAW_RESNAME, "raw", getActivity().getPackageName());
-        File media = Utils.getExternalStoragePrivateFile(getContext(), FILE_RESNAME);
+        int checkExistence = getContext().getResources().getIdentifier(RAW_NAME, "raw", getActivity().getPackageName());
+        File media = Utils.getExternalStoragePrivateFile(getContext(), FILE_NAME);
 
         if ( checkExistence != 0 ) {
             m_bVideofile = true;
@@ -162,7 +161,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                 break;
             case REQUEST_REGISTER:
             case REQUEST_IDENTIFY:
-                String title = "";
+                String title;
                 if (resultCode == Activity.RESULT_OK) {
                     if (requestCode == REQUEST_REGISTER) title = "Register";
                     else title = String.format("Validate %s", data.getStringExtra(IdentifyActivity.KEY_NAME));
@@ -172,8 +171,8 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                         .setTitle(title)
                         .setMessage(getString(R.string.dialog_pass))
                         .setClickMessage(getString(R.string.btn_ok))
-                        .setOnClickListener((requestCode == REQUEST_IDENTIFY) ? this : null)
-                        .show(getActivity());
+                        .setOnClickListener(this)
+                        .show(getActivity(), (requestCode == REQUEST_IDENTIFY) ? REQUEST_IDENTIFY : REQUEST_OTHER);
                 } else {
                     if (requestCode == REQUEST_REGISTER) title = "Register";
                     else title = "Validate";
@@ -183,11 +182,12 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                         .setTitle(title)
                         .setMessage(getString(R.string.dialog_fail))
                         .setClickMessage(getString(R.string.btn_ok))
-                        .show(getActivity());
+                        .setOnClickListener(this)
+                        .show(getActivity(), REQUEST_OTHER);
                 }
-                fadeButton(true);
                 break;
         }
+        getActivity().getIntent().putExtra(KEY_STATE, REQUEST_PROFILE_CREATE);
     }
 
     @Override
@@ -211,10 +211,16 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                 showDialog(SETTING_SERVER);
                 break;
             case R.id.click_btn:
-                CBroadcast m_objOpen = new CBroadcast(getContext());
-                if(m_objOpen != null){
-                    m_objOpen.iocontrollerOpen("Z01", m_objOpen.genMsgClientId());
+                if (view.getTag() instanceof Integer) {
+                    if ((int) view.getTag() == REQUEST_IDENTIFY) {
+                        CBroadcast m_objOpen = new CBroadcast(getContext());
+                        if(m_objOpen != null){
+                            m_objOpen.iocontrollerOpen("Z01", m_objOpen.genMsgClientId());
+                        }
+                    }
+                    fadeButton(true);
                 }
+
                 break;
             case R.id.imgAbout:
                 showDialog(ABOUT);

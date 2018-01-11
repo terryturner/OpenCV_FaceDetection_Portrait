@@ -13,4 +13,13 @@
     <color name="fancyPanelStart">#FFAB91</color>
     <color name="fancyPanelCenter">#FF5722</color>
     <color name="fancyPanelEnd">#DD2C00</color>
+
+    <color name="titlebackgroundcolor">#5584b9</color>
+    <color name="titletextcolor">#fbfcfd</color>
+    <color name="blue">#ff3b8ede</color>
+    <color name="gray">#4b4b4b</color>
+
+    <color name="button_focused">#ff51b3e1</color>
+    <color name="button_blue">#c80571d9</color>
+    <color name="button_orange">#c8ef6707</color>
 </resources>

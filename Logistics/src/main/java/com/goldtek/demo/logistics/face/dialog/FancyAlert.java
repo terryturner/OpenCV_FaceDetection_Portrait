@@ -22,7 +22,6 @@ public class FancyAlert extends Dialog implements
         android.view.View.OnClickListener {
 
     private Activity mActivity;
-    private Dialog mDialog;
     private Builder mBuilder;
     private View.OnClickListener mClickListener;
 
@@ -45,6 +44,7 @@ public class FancyAlert extends Dialog implements
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.fancy_alert);
         findViewById(R.id.click_btn).setOnClickListener(this);
+        setCancelable(false);
 
         if (mBuilder.mIconRes != -1) ((ImageView)findViewById(R.id.fancy_icon)).setImageResource(mBuilder.mIconRes);
         if (mBuilder.mTitle != null) ((TextView)findViewById(R.id.title)).setText(mBuilder.mTitle);

@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">GoldtekFaceDemo</string>
     <string name="label_main">Demo V1.0</string>
+    <string name="title_name">Face Recognition Demo</string>
 
     <!-- UI Elements -->
     <string name="btn_capture">Click</string>
@@ -21,5 +22,14 @@
     <string name="permission_camera_rationale">Access to the camera is needed for detection</string>
     <string name="no_camera_permission">This application cannot run because it does not have the camera permission.  The application will now exit.</string>
     <string name="low_storage_error">Face detector dependencies cannot be downloaded due to low device storage</string>
+
+    <!-- About -->
+    <string name="about">Information</string>
+    <string name="aboutName">GTSW_FaceDemo</string>
+    <string name="aboutVersion">Version 1.0.0.1</string>
+    <string name="aboutDate">2018/01/08</string>
+    <string name="aboutCopyright">Copyright &#169; 2018-2020</string>
+    <string name="aboutCompany">GOLDT<i>e</i>k Technology Co Ltd.\nAll Rights Reserved</string>
+    <string name="aboutWeb">http://www.goldtek.com/</string>
 
 </resources>

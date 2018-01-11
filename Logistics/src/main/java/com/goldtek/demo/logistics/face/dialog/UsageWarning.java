@@ -18,6 +18,7 @@ public class UsageWarning extends EasyLicensesDialogCompat implements DialogInte
     public UsageWarning(Context context, int code) {
         super(context);
         mCode = code;
+        setCancelable(false);
     }
 
     public AlertDialog.Builder setPositiveButton(@StringRes int textId, final DialogInterface.OnClickListener listener) {

@@ -1,8 +1,11 @@
 package com.goldtek.demo.logistics.face;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -11,31 +14,53 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.Toast;
 
+import com.goldtek.demo.logistics.face.dialog.AboutDialogFragment;
 import com.goldtek.demo.logistics.face.dialog.FancyAlert;
 import com.goldtek.demo.logistics.face.dialog.ProfileDialogFragment;
 import com.goldtek.demo.logistics.face.dialog.ServerDialogFragment;
 import com.goldtek.demo.logistics.face.dialog.UsageWarning;
-import com.marcoscg.easylicensesdialog.EasyLicensesDialogCompat;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by Terry on 2017/12/18 0018.
  */
 
-public class MainFragment extends Fragment implements View.OnClickListener, DialogInterface.OnClickListener {
-    private String mArgument ;
+public class MainFragment extends Fragment implements SurfaceHolder.Callback, MediaPlayer.OnPreparedListener ,View.OnClickListener, DialogInterface.OnClickListener {
+    private static final String TAG = "MainFragment";
+    private static final String RAW_RESNAME = "demo3";
+    private static final String FILE_RESNAME = "demo3.mp4";
+
     public static final String ARGUMENT ="argument";
     public static final String RESPONSE = "response";
     public static final String PROFILE_CREATE = "profile_create_dialog";
     public static final String SETTING_SERVER = "config_server_dialog";
+    public static final String ABOUT = "about_dialog";
     public static final String USAGE_WARNING = "usage_warning_dialog";
     public static final int REQUEST_PROFILE_CREATE = 0X110;
-    public static final int REQUEST_USAGE_WARNING = 0X111;
     public static final int REQUEST_REGISTER = 0X112;
     public static final int REQUEST_IDENTIFY = 0X113;
+    public static final int REQUEST_OTHER = 0X199;
+
+    private String mArgument ;
+    private Uri mVideo_uri;
+    private boolean m_bVideofile = false;
+
+    private SurfaceView mSurfaceView;
+    private SurfaceHolder mSurfaceHolder;
+    private MediaPlayer mMediaPlayer;
+
+
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -65,13 +90,45 @@ public class MainFragment extends Fragment implements View.OnClickListener, Dial
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        if (m_bVideofile) {
+            fadeButton(true);
+        }
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
     {
-        View view = inflater.inflate(R.layout.fragment_main, container, false);
+        View view = inflater.inflate(R.layout.fragment_main2, container, false);
         view.findViewById(R.id.Register).setOnClickListener(this);
         view.findViewById(R.id.Identify).setOnClickListener(this);
         view.findViewById(R.id.SettingServer).setOnClickListener(this);
+        view.findViewById(R.id.imgAbout).setOnClickListener(this);
+        view.findViewById(R.id.imgLogo).setOnClickListener(this);
+
+        int checkExistence = getContext().getResources().getIdentifier(RAW_RESNAME, "raw", getActivity().getPackageName());
+        File media = Utils.getExternalStoragePrivateFile(getContext(), FILE_RESNAME);
+
+        if ( checkExistence != 0 ) {
+            m_bVideofile = true;
+            mVideo_uri = Uri.parse("android.resource://" + getContext().getPackageName() + "/" + checkExistence);
+        } else if (media != null) {
+            m_bVideofile = true;
+            mVideo_uri = Uri.fromFile(media);
+        } else m_bVideofile = false;
+
+        if (m_bVideofile) {
+            view.findViewById(R.id.root).setBackgroundResource(R.drawable.gradient_skyblue2);
+            mSurfaceView = view.findViewById(R.id.surfaceViewFrame);
+            mSurfaceHolder = mSurfaceView.getHolder();
+            mSurfaceHolder.addCallback(MainFragment.this);
+        } else {
+            view.findViewById(R.id.root).setBackgroundResource(R.drawable.gradient_skyblue1);
+            view.findViewById(R.id.surfaceViewFrame).setVisibility(View.INVISIBLE);
+        }
+
         return view;
     }
 
@@ -91,7 +148,11 @@ public class MainFragment extends Fragment implements View.OnClickListener, Dial
                     register.putExtra(RegisterActivity.KEY_NAME, name);
                     register.putExtra(RegisterActivity.KEY_LEVEL, level);
                     startActivityForResult(register, REQUEST_REGISTER);
-                }
+                } else
+                    fadeButton(true);
+                break;
+            case REQUEST_OTHER:
+                fadeButton(true);
                 break;
             case REQUEST_REGISTER:
             case REQUEST_IDENTIFY:
@@ -118,6 +179,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, Dial
                         .setClickMessage(getString(R.string.btn_ok))
                         .show(getActivity());
                 }
+                fadeButton(true);
                 break;
         }
     }
@@ -148,6 +210,9 @@ public class MainFragment extends Fragment implements View.OnClickListener, Dial
                     m_objOpen.iocontrollerOpen("Z01", m_objOpen.genMsgClientId());
                 }
                 break;
+            case R.id.imgAbout:
+                showDialog(ABOUT);
+                break;
         }
     }
 
@@ -161,6 +226,75 @@ public class MainFragment extends Fragment implements View.OnClickListener, Dial
                 startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);
                 break;
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if(m_bVideofile)
+            releaseMediaPlayer();
+    }
+
+    @Override
+    public void surfaceCreated(SurfaceHolder surfaceHolder) {
+        mMediaPlayer = new MediaPlayer();
+        mMediaPlayer.setDisplay(mSurfaceHolder);
+        try {
+            mMediaPlayer.setDataSource(getContext(), mVideo_uri);
+            mMediaPlayer.prepare();
+            mMediaPlayer.setOnPreparedListener(MainFragment.this);
+            mMediaPlayer.setLooping(true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        setVideoSize();
+    }
+
+    @Override
+    public void onPrepared(MediaPlayer mediaPlayer) {
+        mMediaPlayer.start();
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+
+    }
+
+    private void releaseMediaPlayer() {
+        if (mMediaPlayer != null) {
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+        }
+    }
+
+    private void setVideoSize() {
+
+        // // Get the dimensions of the video
+        int videoWidth = mMediaPlayer.getVideoWidth();
+        int videoHeight = mMediaPlayer.getVideoHeight();
+        float videoProportion = (float) videoWidth / (float) videoHeight;
+
+        // Get the width of the screen
+        int screenWidth = getActivity().getWindowManager().getDefaultDisplay().getWidth();
+        int screenHeight = getActivity().getWindowManager().getDefaultDisplay().getHeight();
+        float screenProportion = (float) screenWidth / (float) screenHeight;
+
+        // Get the SurfaceView layout parameters
+        android.view.ViewGroup.LayoutParams lp = mSurfaceView.getLayoutParams();
+        if (videoProportion > screenProportion) {
+            lp.width = screenWidth;
+            lp.height = (int) ((float) screenWidth / videoProportion);
+        } else {
+            lp.width = (int) (videoProportion * (float) screenHeight);
+            lp.height = screenHeight;
+        }
+        // Commit the layout parameters
+        mSurfaceView.setLayoutParams(lp);
     }
 
     private void showDialog(String tag) {
@@ -180,15 +314,46 @@ public class MainFragment extends Fragment implements View.OnClickListener, Dial
                 break;
             case SETTING_SERVER:
                 newFragment = new ServerDialogFragment();
+                newFragment.setTargetFragment(this, REQUEST_OTHER);
                 break;
-            case USAGE_WARNING:
+            case ABOUT:
+                newFragment = new AboutDialogFragment();
+                newFragment.setTargetFragment(this, REQUEST_OTHER);
                 break;
         }
 
         if (newFragment != null) {
+            fadeButton(false);
             newFragment.show(getFragmentManager(), tag);
         }
     }
+
+//    private void fadeIn() {
+//        getActivity().findViewById(R.id.Register).startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fade_in_btn));
+//        getActivity().findViewById(R.id.Identify).startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fade_in_btn));
+//        getActivity().findViewById(R.id.SettingServer).startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fade_in_btn));
+//    }
+//    private void fadeOut() {
+//        getActivity().findViewById(R.id.Register).startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fade_out_btn));
+//        getActivity().findViewById(R.id.Identify).startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fade_out_btn));
+//        getActivity().findViewById(R.id.SettingServer).startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fade_out_btn));
+//
+//        Animation anim = AnimationUtils.loadAnimation(getContext(), R.anim.fade_out_btn);
+//        anim.setAnimationListener(new GTAnimationListener());
+//    }
+
+    private void fadeButton(boolean visible) {
+        Animation anim = AnimationUtils.loadAnimation(getContext(), visible ? R.anim.fade_in_btn : R.anim.fade_out_btn);
+        anim.setAnimationListener(new GTAnimationListener(getActivity().findViewById(R.id.Register), visible ? View.VISIBLE : View.INVISIBLE));
+        getActivity().findViewById(R.id.Register).startAnimation(anim);
+        anim = AnimationUtils.loadAnimation(getContext(), visible ? R.anim.fade_in_btn : R.anim.fade_out_btn);
+        anim.setAnimationListener(new GTAnimationListener(getActivity().findViewById(R.id.Identify), visible ? View.VISIBLE : View.INVISIBLE));
+        getActivity().findViewById(R.id.Identify).startAnimation(anim);
+        anim = AnimationUtils.loadAnimation(getContext(), visible ? R.anim.fade_in_btn : R.anim.fade_out_btn);
+        anim.setAnimationListener(new GTAnimationListener(getActivity().findViewById(R.id.SettingServer), visible ? View.VISIBLE : View.INVISIBLE));
+        getActivity().findViewById(R.id.SettingServer).startAnimation(anim);
+    }
+
 
     public static MainFragment newInstance(String argument)
     {

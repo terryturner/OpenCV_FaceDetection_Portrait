@@ -45,6 +45,8 @@ public class ProfileDialogFragment extends DialogFragment {
             }
         });
 
+        setCancelable(false);
+
         return new AlertDialog.Builder(getActivity())
                 //.setIcon(R.drawable.goldtek)
                 .setTitle("Register")

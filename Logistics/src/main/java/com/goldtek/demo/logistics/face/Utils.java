@@ -1,5 +1,6 @@
 package com.goldtek.demo.logistics.face;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -7,6 +8,9 @@ import android.os.Environment;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -78,10 +82,74 @@ public class Utils {
         }
     }
 
+    public static void createExternalStoragePrivateFile(Context context, String name, InputStream is) {
+        // Create a path where we will place our private file on external
+        // storage.
+        File file = new File(context.getExternalFilesDir(null), name);
+
+        try {
+            // Very simple code to copy a picture from the application's
+            // resource into the external file.  Note that this code does
+            // no error checking, and assumes the picture is small (does not
+            // try to copy it in chunks).  Note that if external storage is
+            // not currently mounted this will silently fail.
+
+            OutputStream os = new FileOutputStream(file);
+            byte[] data = new byte[is.available()];
+            is.read(data);
+            os.write(data);
+            is.close();
+            os.close();
+        } catch (IOException e) {
+            // Unable to create file, likely because external storage is
+            // not currently mounted.
+            e.printStackTrace();
+        }
+    }
+
+    public static void deleteExternalStoragePrivateFile(Context context, String name) {
+        // Get path for the file on external storage.  If external
+        // storage is not currently mounted this will fail.
+        File file = new File(context.getExternalFilesDir(null), name);
+        if (file != null) {
+            file.delete();
+        }
+    }
+
+    public static File getExternalStoragePrivateFile(Context context, String name) {
+        // Get path for the file on external storage.  If external
+        // storage is not currently mounted this will fail.
+        File file = new File(context.getExternalFilesDir(null), name);
+        if (isExternalStorageReadable() && file != null && file.exists()) {
+            return file;
+        }
+        return null;
+    }
+
+    public static boolean hasExternalStoragePrivateFile(Context context, String name) {
+        // Get path for the file on external storage.  If external
+        // storage is not currently mounted this will fail.
+        File file = new File(context.getExternalFilesDir(null), name);
+        if (isExternalStorageReadable() && file != null) {
+            return file.exists();
+        }
+        return false;
+    }
+
     /* Checks if external storage is available for read and write */
     public static boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    /* Checks if external storage is available to at least read */
+    public static boolean isExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
             return true;
         }
         return false;

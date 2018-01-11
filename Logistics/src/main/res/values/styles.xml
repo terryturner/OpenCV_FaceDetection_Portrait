@@ -8,4 +8,9 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="MyCustomDialog" parent="android:Theme.DeviceDefault.Dialog.NoActionBar.MinWidth" >
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:windowIsFloating">true</item>
+    </style>
 </resources>

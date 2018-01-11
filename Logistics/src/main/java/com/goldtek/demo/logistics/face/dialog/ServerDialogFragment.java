@@ -43,6 +43,8 @@ public class ServerDialogFragment extends DialogFragment {
         final TextView palmServer = view.findViewById(R.id.PalmServer);
         palmServer.setText(mPalmAddr);
 
+        setCancelable(false);
+
         return new AlertDialog.Builder(getActivity())
                 //.setIcon(R.drawable.goldtek)
                 .setTitle("Config servers")
@@ -56,13 +58,15 @@ public class ServerDialogFragment extends DialogFragment {
                                 editor.putString(KEY_SERVER_RECOGNIZE, recognizeServer.getText().toString());
                                 editor.putString(KEY_SERVER_PALM, palmServer.getText().toString());
                                 editor.commit();
+
+                                getTargetFragment().onActivityResult(getTargetRequestCode(), Activity.RESULT_OK, getActivity().getIntent());
                             }
                         }
                 )
                 .setNegativeButton(R.string.btn_cancel,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
-
+                                getTargetFragment().onActivityResult(getTargetRequestCode(), Activity.RESULT_CANCELED, getActivity().getIntent());
                             }
                         }
                 )

@@ -208,8 +208,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
 
         mRegisterID = mRegisterName = getIntent().getStringExtra(KEY_NAME);
 
-        Log.i(TAG, getDeviceName());
-        if (getDeviceName().contains("fc11501")) {
+        if (com.goldtek.demo.logistics.face.Utils.isTargetDevice()) {
             mCameraFront = false;
             setContentView(R.layout.backcam_register);
         }
@@ -264,7 +263,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
     public void onCameraViewStarted(int width, int height) {
         mGray = new Mat();
         mRgba = new Mat();
-        mCacheBitmap = Bitmap.createBitmap(height, width, Bitmap.Config.ARGB_8888);
+        if (width > 0 && height > 0) mCacheBitmap = Bitmap.createBitmap(height, width, Bitmap.Config.ARGB_8888);
     }
 
     public void onCameraViewStopped() {
@@ -454,34 +453,4 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         }
     }
 
-    public static String getDeviceName() {
-        String manufacturer = Build.MANUFACTURER;
-        String model = Build.MODEL;
-        if (model.startsWith(manufacturer)) {
-            return capitalize(model);
-        }
-        return capitalize(manufacturer) + " " + model;
-    }
-
-    private static String capitalize(String str) {
-        if (TextUtils.isEmpty(str)) {
-            return str;
-        }
-        char[] arr = str.toCharArray();
-        boolean capitalizeNext = true;
-
-        StringBuilder phrase = new StringBuilder();
-        for (char c : arr) {
-            if (capitalizeNext && Character.isLetter(c)) {
-                phrase.append(Character.toUpperCase(c));
-                capitalizeNext = false;
-                continue;
-            } else if (Character.isWhitespace(c)) {
-                capitalizeNext = true;
-            }
-            phrase.append(c);
-        }
-
-        return phrase.toString();
-    }
 }

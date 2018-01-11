@@ -29,18 +29,20 @@ public class MainActivity extends AppCompatActivity {
                 Configuration.SCREENLAYOUT_SIZE_MASK;
 
         String toastMsg;
+        toastMsg = Utils.getDeviceName() + " - ";
+
         switch(screenSize) {
             case Configuration.SCREENLAYOUT_SIZE_XLARGE:
-                toastMsg = "Extra Large screen";
+                toastMsg += "Extra Large screen";
                 break;
             case Configuration.SCREENLAYOUT_SIZE_LARGE:
-                toastMsg = "Large screen";
+                toastMsg += "Large screen";
                 break;
             case Configuration.SCREENLAYOUT_SIZE_NORMAL:
-                toastMsg = "Normal screen";
+                toastMsg += "Normal screen";
                 break;
             case Configuration.SCREENLAYOUT_SIZE_SMALL:
-                toastMsg = "Small screen";
+                toastMsg += "Small screen";
                 break;
             default:
                 toastMsg = String.format("Screen size is neither large, normal or small, but %d", screenSize);

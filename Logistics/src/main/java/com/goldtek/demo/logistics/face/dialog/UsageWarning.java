@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.support.annotation.StringRes;
 import android.support.v7.app.AlertDialog;
+import android.view.Gravity;
+import android.view.ViewGroup;
+import android.view.Window;
 
 import com.marcoscg.easylicensesdialog.EasyLicensesDialogCompat;
 
@@ -24,6 +27,15 @@ public class UsageWarning extends EasyLicensesDialogCompat implements DialogInte
     public AlertDialog.Builder setPositiveButton(@StringRes int textId, final DialogInterface.OnClickListener listener) {
         mListener = listener;
         return super.setPositiveButton(textId, this);
+    }
+
+    @Override
+    public AlertDialog create() {
+        AlertDialog dialog = super.create();
+        Window window = dialog.getWindow();
+        window.setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        window.setGravity(Gravity.CENTER);
+        return dialog;
     }
 
     @Override

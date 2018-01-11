@@ -55,6 +55,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
     private String mArgument ;
     private Uri mVideo_uri;
     private boolean m_bVideofile = false;
+    private boolean m_bTargetDevice = false;
 
     private SurfaceView mSurfaceView;
     private SurfaceHolder mSurfaceHolder;
@@ -66,7 +67,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-
+        m_bTargetDevice = Utils.isTargetDevice();
         Bundle bundle = getArguments();
         if (bundle != null)
             mArgument = bundle.getString(ARGUMENT);
@@ -127,6 +128,11 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
         } else {
             view.findViewById(R.id.root).setBackgroundResource(R.drawable.gradient_skyblue1);
             view.findViewById(R.id.surfaceViewFrame).setVisibility(View.INVISIBLE);
+        }
+        if (m_bTargetDevice) {
+            view.findViewById(R.id.Register).setEnabled(false);
+        } else {
+            view.findViewById(R.id.Identify).setEnabled(false);
         }
 
         return view;
@@ -328,27 +334,21 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
         }
     }
 
-//    private void fadeIn() {
-//        getActivity().findViewById(R.id.Register).startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fade_in_btn));
-//        getActivity().findViewById(R.id.Identify).startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fade_in_btn));
-//        getActivity().findViewById(R.id.SettingServer).startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fade_in_btn));
-//    }
-//    private void fadeOut() {
-//        getActivity().findViewById(R.id.Register).startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fade_out_btn));
-//        getActivity().findViewById(R.id.Identify).startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fade_out_btn));
-//        getActivity().findViewById(R.id.SettingServer).startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fade_out_btn));
-//
-//        Animation anim = AnimationUtils.loadAnimation(getContext(), R.anim.fade_out_btn);
-//        anim.setAnimationListener(new GTAnimationListener());
-//    }
-
     private void fadeButton(boolean visible) {
-        Animation anim = AnimationUtils.loadAnimation(getContext(), visible ? R.anim.fade_in_btn : R.anim.fade_out_btn);
-        anim.setAnimationListener(new GTAnimationListener(getActivity().findViewById(R.id.Register), visible ? View.VISIBLE : View.INVISIBLE));
-        getActivity().findViewById(R.id.Register).startAnimation(anim);
-        anim = AnimationUtils.loadAnimation(getContext(), visible ? R.anim.fade_in_btn : R.anim.fade_out_btn);
-        anim.setAnimationListener(new GTAnimationListener(getActivity().findViewById(R.id.Identify), visible ? View.VISIBLE : View.INVISIBLE));
-        getActivity().findViewById(R.id.Identify).startAnimation(anim);
+        Animation anim;
+        //if (m_bTargetDevice)
+        {
+            anim = AnimationUtils.loadAnimation(getContext(), visible ? R.anim.fade_in_btn : R.anim.fade_out_btn);
+            anim.setAnimationListener(new GTAnimationListener(getActivity().findViewById(R.id.Identify), visible ? View.VISIBLE : View.INVISIBLE));
+            getActivity().findViewById(R.id.Identify).startAnimation(anim);
+        }
+        //else
+        {
+            anim = AnimationUtils.loadAnimation(getContext(), visible ? R.anim.fade_in_btn : R.anim.fade_out_btn);
+            anim.setAnimationListener(new GTAnimationListener(getActivity().findViewById(R.id.Register), visible ? View.VISIBLE : View.INVISIBLE));
+            getActivity().findViewById(R.id.Register).startAnimation(anim);
+        }
+
         anim = AnimationUtils.loadAnimation(getContext(), visible ? R.anim.fade_in_btn : R.anim.fade_out_btn);
         anim.setAnimationListener(new GTAnimationListener(getActivity().findViewById(R.id.SettingServer), visible ? View.VISIBLE : View.INVISIBLE));
         getActivity().findViewById(R.id.SettingServer).startAnimation(anim);

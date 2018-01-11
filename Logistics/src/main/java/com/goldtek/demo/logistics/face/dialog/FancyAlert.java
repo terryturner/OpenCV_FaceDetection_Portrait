@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
@@ -44,13 +45,15 @@ public class FancyAlert extends Dialog implements
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.fancy_alert);
         findViewById(R.id.click_btn).setOnClickListener(this);
-        setCancelable(false);
 
         if (mBuilder.mIconRes != -1) ((ImageView)findViewById(R.id.fancy_icon)).setImageResource(mBuilder.mIconRes);
         if (mBuilder.mTitle != null) ((TextView)findViewById(R.id.title)).setText(mBuilder.mTitle);
         if (mBuilder.mMessage != null) ((TextView)findViewById(R.id.message)).setText(mBuilder.mMessage);
         if (mBuilder.mClickMessage != null) ((Button)findViewById(R.id.click_btn)).setText(mBuilder.mClickMessage);
         if (mBuilder.mClick != null) mClickListener = mBuilder.mClick;
+
+        setCancelable(false);
+        getWindow().setGravity(Gravity.CENTER);
     }
 
     @Override

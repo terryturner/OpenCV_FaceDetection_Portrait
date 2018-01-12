@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -161,6 +162,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                 break;
             case REQUEST_REGISTER:
             case REQUEST_IDENTIFY:
+                Log.i(TAG, "result: " + resultCode);
                 String title;
                 if (resultCode == Activity.RESULT_OK) {
                     if (requestCode == REQUEST_REGISTER) title = "Register";

@@ -6,12 +6,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -54,8 +52,9 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
     private static final String    TAG                 = "Register";
     private static final Scalar    FACE_RECT_COLOR     = new Scalar(0, 255, 0, 255);
     private static final boolean   FLAG_DEBUG          = false;
-    private static final int       SET_PROGRESS_VISIBLE     = 0x110;
-    private static final int       SET_PROGRESS_INVISIBLE   = 0x111;
+    private static final int       SET_SENDING_PROGRESS_VISIBLE = 0x110;
+    private static final int       SET_SENDING_PROGRESS_INVISIBLE = 0x111;
+    private static final int       SET_LEARNING_PROGRESS_VISIBLE = 0x112;
     public static final int        REGISTER_LIMIT      = 10;
     public static final String     KEY_NAME            = "register_name";
     public static final String     KEY_LEVEL           = "register_level";
@@ -78,8 +77,8 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
     private boolean                mRegisterDone       = false;
 
     private CameraBridgeViewBase   mOpenCvCameraView;
-    private ProgressBar            mProgress;
-    private SpinKitView            mSpinKit;
+    private ProgressBar            mSendingProgressBar;
+    private SpinKitView            mLearningProgress;
     private RestrictBox            mRestrictBox;
 
     private MainHandler            mHandler            = new MainHandler(this);
@@ -101,11 +100,14 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         public void handleMessage(Message msg) {
             RegisterActivity activity = mActivity.get();
             switch (msg.what) {
-                case SET_PROGRESS_VISIBLE:
-                    activity.setProgress(true);
+                case SET_SENDING_PROGRESS_VISIBLE:
+                    activity.setProgress(true, false);
                     break;
-                case SET_PROGRESS_INVISIBLE:
-                    activity.setProgress(false);
+                case SET_SENDING_PROGRESS_INVISIBLE:
+                    activity.setProgress(false, false);
+                    break;
+                case SET_LEARNING_PROGRESS_VISIBLE:
+                    activity.setProgress(false, true);
                     break;
                 default:
                     String szMsgType = msg.getData().getString(IClientProtocol.Hndl_MSGTYPE, "");
@@ -219,9 +221,9 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         mOpenCvCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
 
-        mSpinKit = findViewById(R.id.spin_kit);
-        mProgress = findViewById(R.id.progressBar);
-        mProgress.getIndeterminateDrawable().setColorFilter(getResources()
+        mLearningProgress = findViewById(R.id.spin_kit);
+        mSendingProgressBar = findViewById(R.id.progressBar);
+        mSendingProgressBar.getIndeterminateDrawable().setColorFilter(getResources()
                 .getColor(R.color.colorAccent), PorterDuff.Mode.SRC_IN);
         mRestrictBox = findViewById(R.id.overlay_surface_view);
 
@@ -284,7 +286,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         Core.flip(tempMat, mRgba, mCameraFront ? -1 : 1);
         tempMat.release();
 
-        if (mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing())
+        if (mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing() && mSendFrame < REGISTER_LIMIT)
         {
             mGray = inputFrame.gray();
 
@@ -353,7 +355,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
                 resized.recycle();
                 cropped.release();
                 tempMat.release();
-                mHandler.sendEmptyMessage(SET_PROGRESS_VISIBLE);
+                if (mSendFrame < REGISTER_LIMIT) mHandler.sendEmptyMessage(SET_SENDING_PROGRESS_VISIBLE);
             }
         }
 
@@ -383,9 +385,9 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
         }
     }
 
-    private void setProgress(boolean visible) {
-        mProgress.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
-        mSpinKit.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
+    private void setProgress(boolean sending, boolean learning) {
+        mSendingProgressBar.setVisibility(sending ? View.VISIBLE : View.INVISIBLE);
+        mLearningProgress.setVisibility(learning ? View.VISIBLE : View.INVISIBLE);
     }
 
     private void onRegister() {
@@ -431,7 +433,16 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
                     break;
             }
 
-            if (mSendFrame < REGISTER_LIMIT) mHandler.sendEmptyMessage(SET_PROGRESS_INVISIBLE);
+            if (mSendFrame < REGISTER_LIMIT) {
+                Log.i(TAG, "send done " + mSendFrame);
+                mHandler.sendEmptyMessage(SET_SENDING_PROGRESS_INVISIBLE);
+            }
+            else {
+                Log.i(TAG, "start learn " + mSendFrame);
+                mHandler.removeMessages(SET_SENDING_PROGRESS_VISIBLE);
+                mHandler.removeMessages(SET_SENDING_PROGRESS_INVISIBLE);
+                mHandler.sendEmptyMessage(SET_LEARNING_PROGRESS_VISIBLE);
+            }
         }
 
     }

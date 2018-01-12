@@ -9,12 +9,17 @@ import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
+import com.goldtek.demo.protocol.client.Common;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Common.GetEnvPath(this);
+        Thread.setDefaultUncaughtExceptionHandler(new CrashLog(Common.m_szRoot));
 
         FragmentManager fm = getSupportFragmentManager();
         Fragment fragment =fm.findFragmentById(R.id.id_fragment_container);

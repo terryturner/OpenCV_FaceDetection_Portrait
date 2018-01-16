@@ -102,9 +102,15 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
     {
-        View view = inflater.inflate(R.layout.fragment_main2, container, false);
-        view.findViewById(R.id.Register).setOnClickListener(this);
-        view.findViewById(R.id.Identify).setOnClickListener(this);
+        View view;
+        if (m_bTargetDevice) view = inflater.inflate(R.layout.fragment_main_on_target, container, false);
+        else view = inflater.inflate(R.layout.fragment_main_on_mobile, container, false);
+
+        if (m_bTargetDevice)
+            view.findViewById(R.id.Identify).setOnClickListener(this);
+        else
+            view.findViewById(R.id.Register).setOnClickListener(this);
+
         view.findViewById(R.id.SettingServer).setOnClickListener(this);
         view.findViewById(R.id.imgAbout).setOnClickListener(this);
         view.findViewById(R.id.imgLogo).setOnClickListener(this);
@@ -128,11 +134,6 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
         } else {
             view.findViewById(R.id.root).setBackgroundResource(R.drawable.gradient_skyblue1);
             view.findViewById(R.id.surfaceViewFrame).setVisibility(View.INVISIBLE);
-        }
-        if (m_bTargetDevice) {
-            view.findViewById(R.id.Register).setEnabled(false);
-        } else {
-            view.findViewById(R.id.Identify).setEnabled(false);
         }
 
         return view;
@@ -226,6 +227,9 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                 break;
             case R.id.imgAbout:
                 showDialog(ABOUT);
+                break;
+            case R.id.imgLogo:
+                startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);
                 break;
         }
     }
@@ -344,13 +348,13 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
 
     private void fadeButton(boolean visible) {
         Animation anim;
-        //if (m_bTargetDevice)
+        if (m_bTargetDevice)
         {
             anim = AnimationUtils.loadAnimation(getContext(), visible ? R.anim.fade_in_btn : R.anim.fade_out_btn);
             anim.setAnimationListener(new GTAnimationListener(getActivity().findViewById(R.id.Identify), visible ? View.VISIBLE : View.INVISIBLE));
             getActivity().findViewById(R.id.Identify).startAnimation(anim);
         }
-        //else
+        else
         {
             anim = AnimationUtils.loadAnimation(getContext(), visible ? R.anim.fade_in_btn : R.anim.fade_out_btn);
             anim.setAnimationListener(new GTAnimationListener(getActivity().findViewById(R.id.Register), visible ? View.VISIBLE : View.INVISIBLE));

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:id="@+id/root">
+
+    <SurfaceView
+        android:id="@+id/surfaceViewFrame"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"/>
+
+    <LinearLayout
+        android:id="@id/container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/layoutTitle"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/blue"
+            android:orientation="horizontal"
+            android:weightSum="1">
+
+            <ImageView
+                android:id="@+id/imgLogo"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:layout_margin="5dp"
+                android:src="@drawable/goldtek" />
+
+            <TextView
+                android:id="@+id/textView9"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:gravity="center"
+                android:layout_margin="5dp"
+                android:text="@string/title_name"
+                android:layout_weight="1"
+                android:textColor="@color/white"
+                android:textSize="20dp"/>
+
+            <ImageView
+                android:id="@+id/imgAbout"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:gravity="right"
+                android:layout_margin="5dp"
+                android:src="@android:drawable/ic_menu_info_details" />
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <Button
+                android:id="@+id/Identify"
+                android:layout_width="196dp"
+                android:layout_height="64dp"
+                android:layout_centerInParent="true"
+                android:background="@drawable/btn_rounded_corner"
+                android:text="@string/btn_identify"
+                android:textSize="18sp"
+                android:textColor="@color/textview_color"/>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <Button
+                android:id="@+id/SettingServer"
+                android:layout_width="196dp"
+                android:layout_height="64dp"
+                android:layout_centerInParent="true"
+                android:background="@drawable/btn_rounded_corner"
+                android:text="@string/btn_setting"
+                android:textSize="18sp"
+                android:textColor="@color/white"/>
+        </RelativeLayout>
+
+    </LinearLayout>
+</FrameLayout>

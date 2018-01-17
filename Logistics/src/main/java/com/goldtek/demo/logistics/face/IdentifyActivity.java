@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -142,9 +143,9 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
 
                     try {
                         // load cascade file from application resources
-                        InputStream is = getResources().openRawResource(org.opencv.samples.facedetect.R.raw.lbpcascade_frontalface);
+                        InputStream is = getResources().openRawResource(org.opencv.samples.facedetect.R.raw.haarcascade_frontalface_alt2);
                         File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-                        mCascadeFile = new File(cascadeDir, "lbpcascade_frontalface.xml");
+                        mCascadeFile = new File(cascadeDir, "haarcascade_frontalface_alt2.xml");
                         FileOutputStream os = new FileOutputStream(mCascadeFile);
 
                         byte[] buffer = new byte[4096];
@@ -214,6 +215,8 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
                 .getColor(R.color.colorAccent), PorterDuff.Mode.SRC_IN);
         mRestrictBox = findViewById(R.id.overlay_surface_view);
         mIdentifiedFrameText = findViewById(R.id.frame_count);
+
+        showWelcome(false);
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         mServerAddr = sharedPrefs.getString(KEY_SERVER_RECOGNIZE, "127.0.0.1");
@@ -382,10 +385,18 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
             finish();
         } else if (finish && !name.equalsIgnoreCase(IClientProtocol.RESULT.UNKNOWN)) {
             mIdentifiedDone = true;
+
+            ((TextView)findViewById(R.id.welcome_name_text)).setText(name);
+            showWelcome(true);
+
+            /*
             Intent returnIntent = new Intent();
             returnIntent.putExtra(KEY_NAME, name);
             setResult(Activity.RESULT_OK, returnIntent);
             finish();
+            */
+        } else {
+            showWelcome(false);
         }
         mIdentifiedFrame++;
         mIdentifiedFrameText.setText(String.valueOf(mIdentifiedFrame));
@@ -411,4 +422,8 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
         }
     }
 
+    private void showWelcome(boolean visible) {
+        ((TextView)findViewById(R.id.welcome_text)).setVisibility(visible ? View.VISIBLE :View.INVISIBLE);
+        ((TextView)findViewById(R.id.welcome_name_text)).setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
+    }
 }

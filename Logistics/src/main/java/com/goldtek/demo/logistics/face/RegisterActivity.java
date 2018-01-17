@@ -154,9 +154,9 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
 
                     try {
                         // load cascade file from application resources
-                        InputStream is = getResources().openRawResource(org.opencv.samples.facedetect.R.raw.lbpcascade_frontalface);
+                        InputStream is = getResources().openRawResource(org.opencv.samples.facedetect.R.raw.haarcascade_frontalface_alt2);
                         File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-                        mCascadeFile = new File(cascadeDir, "lbpcascade_frontalface.xml");
+                        mCascadeFile = new File(cascadeDir, "haarcascade_frontalface_alt2.xml");
                         FileOutputStream os = new FileOutputStream(mCascadeFile);
 
                         byte[] buffer = new byte[4096];

@@ -193,14 +193,12 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.Register:
-                //showDialog(PROFILE_CREATE);
                 new UsageWarning(getActivity(), REQUEST_PROFILE_CREATE)
                         .setTitle("Usage Notices")
                         .setPositiveButton(android.R.string.ok, this)
                         .show();
                 break;
             case R.id.Identify:
-                //startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);
                 new UsageWarning(getActivity(), REQUEST_IDENTIFY)
                         .setTitle("Usage Notices")
                         .setPositiveButton(android.R.string.ok, this)
@@ -225,7 +223,8 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                 showDialog(ABOUT);
                 break;
             case R.id.imgLogo:
-                startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);
+                //startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);
+                startActivity(new Intent(getContext(), IdentifyActivity.class));
                 break;
         }
     }
@@ -237,7 +236,8 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                 showDialog(PROFILE_CREATE);
                 break;
             case REQUEST_IDENTIFY:
-                startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);
+                //startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);
+                startActivity(new Intent(getContext(), IdentifyActivity.class));
                 break;
         }
     }

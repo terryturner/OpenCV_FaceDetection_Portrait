@@ -177,9 +177,13 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                     if (params.isZoomSupported() && mCameraPreferedZoom > 0) {
                         for (int zoom : params.getZoomRatios()) Log.i("terry", "zoom support: " + zoom);
                         Log.i("terry", "zoom : " + params.getZoom());
-                        //params.setZoom(mCameraPreferedZoom);
                     }
-                    params.setExposureCompensation(params.getMaxExposureCompensation());
+                    //params.setExposureCompensation(params.getMaxExposureCompensation());
+                    float min = params.getMinExposureCompensation();
+                    float max = params.getMaxExposureCompensation();
+                    int exposure = Math.round(max-min /100 * 60 + min);
+
+                    params.setExposureCompensation(exposure);
 
                     mCamera.setParameters(params);
                     params = mCamera.getParameters();

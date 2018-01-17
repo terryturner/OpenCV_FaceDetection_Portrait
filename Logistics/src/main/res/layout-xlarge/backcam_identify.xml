@@ -10,8 +10,6 @@
         android:layout_height="fill_parent"
         android:id="@+id/fd_activity_surface_view"
         opencv:camera_id="back"
-        opencv:camera_width="1280"
-        opencv:camera_height="720"
         opencv:show_fps="true" />
 
     <com.goldtek.demo.logistics.face.RestrictBox
@@ -30,6 +28,24 @@
         android:textColor="@color/cpb_red"
         android:textSize="30sp"
         android:id="@+id/frame_count"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:textColor="@color/fancyPanelEnd"
+        android:textSize="56sp"
+        android:text="@string/msg_welcome"
+        android:id="@+id/welcome_text"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/welcome_text"
+        android:textColor="@color/fancyPanelEnd"
+        android:textSize="56sp"
+        android:text="@string/msg_welcome"
+        android:id="@+id/welcome_name_text"/>
 
     <ProgressBar
         android:layout_width="match_parent"

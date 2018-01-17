@@ -10,6 +10,8 @@
         android:layout_height="fill_parent"
         android:id="@+id/fd_activity_surface_view"
         opencv:camera_id="back"
+        opencv:camera_width="1280"
+        opencv:camera_height="720"
         opencv:show_fps="true" />
 
     <com.goldtek.demo.logistics.face.RestrictBox

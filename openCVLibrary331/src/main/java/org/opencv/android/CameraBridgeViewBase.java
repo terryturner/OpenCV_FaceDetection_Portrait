@@ -51,6 +51,9 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
     protected float mScale = 0;
     protected int mPreviewFormat = RGBA;
     protected int mCameraIndex = CAMERA_ID_ANY;
+    protected int mCameraPreferedWidth = -1;
+    protected int mCameraPreferedHeight = -1;
+    protected int mCameraPreferedZoom = -1;
     protected boolean mEnabled;
     protected FpsMeter mFpsMeter = null;
 
@@ -79,6 +82,9 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
             enableFpsMeter();
 
         mCameraIndex = styledAttrs.getInt(R.styleable.CameraBridgeViewBase_camera_id, -1);
+        mCameraPreferedWidth = styledAttrs.getInt(R.styleable.CameraBridgeViewBase_camera_width, -1);
+        mCameraPreferedHeight = styledAttrs.getInt(R.styleable.CameraBridgeViewBase_camera_height, -1);
+        mCameraPreferedZoom = styledAttrs.getInt(R.styleable.CameraBridgeViewBase_camera_zoom, -1);
 
         getHolder().addCallback(this);
         mMaxWidth = MAX_UNSPECIFIED;
@@ -501,12 +507,14 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
 
         maxAllowedWidth = Math.max(a, b);
         maxAllowedHeight = Math.min(a, b);
-        //Log.i("terry", "max size " + maxAllowedWidth + " " + maxAllowedHeight);
+        Log.i("terry", "max size " + maxAllowedWidth + " " + maxAllowedHeight);
+
+
 
         for (Object size : supportedSizes) {
             int width = accessor.getWidth(size);
             int height = accessor.getHeight(size);
-            //Log.i("terry", "dbg calc " + width + " " + height);
+            Log.i("terry", "dbg calc " + width + " " + height);
 
             if (width <= maxAllowedWidth && height <= maxAllowedHeight) {
                 if (width >= calcWidth && height >= calcHeight) {
@@ -516,6 +524,12 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
             }
         }
 
+        if (supportedSizes != null && mCameraPreferedWidth > 0 && mCameraPreferedHeight > 0) {
+            return new Size(mCameraPreferedWidth, mCameraPreferedHeight);
+        }
+
         return new Size(calcWidth, calcHeight);
     }
+
+
 }

@@ -3,9 +3,11 @@ package com.goldtek.demo.logistics.face;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -47,6 +49,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
     private static final int REQUEST_PROFILE_CREATE = 0X110;
     private static final int REQUEST_REGISTER = 0X112;
     private static final int REQUEST_IDENTIFY = 0X113;
+    private static final int REQUEST_SETTING = 0X114;
     private static final int REQUEST_OTHER = 0X199;
 
     public static final String ARGUMENT ="argument";
@@ -54,6 +57,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
 
     private String mArgument ;
     private Uri mVideo_uri;
+    private boolean m_bPlayMedia = true;
     private boolean m_bVideofile = false;
     private boolean m_bTargetDevice = false;
 
@@ -73,6 +77,9 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
             mArgument = bundle.getString(ARGUMENT);
 
         setHasOptionsMenu(true);
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        m_bPlayMedia = sharedPrefs.getBoolean(ServerDialogFragment.KEY_PLAY_MEDIA, true);
     }
 
     @Override
@@ -93,7 +100,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
     @Override
     public void onResume() {
         super.onResume();
-        if (m_bVideofile && getActivity().getIntent().getIntExtra(KEY_STATE, -1) < 0) {
+        if (getActivity().getIntent().getIntExtra(KEY_STATE, -1) < 0) {
             fadeButton(true);
         }
     }
@@ -115,26 +122,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
         view.findViewById(R.id.imgAbout).setOnClickListener(this);
         view.findViewById(R.id.imgLogo).setOnClickListener(this);
 
-        int checkExistence = getContext().getResources().getIdentifier(RAW_NAME, "raw", getActivity().getPackageName());
-        File media = Utils.getExternalStoragePrivateFile(getContext(), FILE_NAME);
-
-        if ( checkExistence != 0 ) {
-            m_bVideofile = true;
-            mVideo_uri = Uri.parse("android.resource://" + getContext().getPackageName() + "/" + checkExistence);
-        } else if (media != null) {
-            m_bVideofile = true;
-            mVideo_uri = Uri.fromFile(media);
-        } else m_bVideofile = false;
-
-        if (m_bVideofile) {
-            view.findViewById(R.id.root).setBackgroundResource(R.drawable.gradient_skyblue2);
-            mSurfaceView = view.findViewById(R.id.surfaceViewFrame);
-            mSurfaceHolder = mSurfaceView.getHolder();
-            mSurfaceHolder.addCallback(MainFragment.this);
-        } else {
-            view.findViewById(R.id.root).setBackgroundResource(R.drawable.gradient_skyblue1);
-            view.findViewById(R.id.surfaceViewFrame).setVisibility(View.INVISIBLE);
-        }
+        playMedia(view);
 
         return view;
     }
@@ -159,6 +147,14 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                     fadeButton(true);
                 break;
             case REQUEST_OTHER:
+                fadeButton(true);
+                break;
+            case REQUEST_SETTING:
+                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                m_bPlayMedia = sharedPrefs.getBoolean(ServerDialogFragment.KEY_PLAY_MEDIA, true);
+
+                if (m_bPlayMedia) playMedia(getView());
+                else releaseMediaPlayer();
                 fadeButton(true);
                 break;
             case REQUEST_REGISTER:
@@ -283,6 +279,30 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
 
     }
 
+    private void playMedia(View view) {
+        int checkExistence = getContext().getResources().getIdentifier(RAW_NAME, "raw", getActivity().getPackageName());
+
+        File media = Utils.getExternalStoragePrivateFile(getContext(), FILE_NAME);
+
+        if (checkExistence != 0) {
+            m_bVideofile = true;
+            mVideo_uri = Uri.parse("android.resource://" + getContext().getPackageName() + "/" + checkExistence);
+        } else if (media != null) {
+            m_bVideofile = true;
+            mVideo_uri = Uri.fromFile(media);
+        } else m_bVideofile = false;
+
+        if (m_bPlayMedia && m_bVideofile) {
+            view.findViewById(R.id.root).setBackgroundResource(R.drawable.gradient_skyblue2);
+            mSurfaceView = view.findViewById(R.id.surfaceViewFrame);
+            mSurfaceHolder = mSurfaceView.getHolder();
+            mSurfaceHolder.addCallback(MainFragment.this);
+        } else {
+            view.findViewById(R.id.root).setBackgroundResource(R.drawable.gradient_skyblue1);
+            view.findViewById(R.id.surfaceViewFrame).setVisibility(View.INVISIBLE);
+        }
+    }
+
     private void releaseMediaPlayer() {
         if (mMediaPlayer != null) {
             mMediaPlayer.release();
@@ -332,7 +352,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                 break;
             case SETTING_SERVER:
                 newFragment = new ServerDialogFragment();
-                newFragment.setTargetFragment(this, REQUEST_OTHER);
+                newFragment.setTargetFragment(this, REQUEST_SETTING);
                 break;
             case ABOUT:
                 newFragment = new AboutDialogFragment();

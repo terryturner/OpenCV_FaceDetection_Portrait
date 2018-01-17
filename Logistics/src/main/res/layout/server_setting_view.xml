@@ -44,5 +44,22 @@
             android:id="@+id/PalmServer" />
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="8"
+            android:text="Media"/>
+        <ToggleButton
+            android:id="@+id/PlayMedia"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textOn="On"
+            android:textOff="Off" />
+    </LinearLayout>
 
 </LinearLayout>

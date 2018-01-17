@@ -375,7 +375,7 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
     private void onIdentify(boolean finish, String name) {
         Log.i(TAG, "onIdentify " + mIdentifiedFrame + ": " + name);
 
-        if (mIdentifiedFrame >= 10 || mProtocol == null) {
+        if (mIdentifiedFrame > 10 || mProtocol == null) {
             mIdentifiedDone = true;
             Intent returnIntent = new Intent();
             setResult(Activity.RESULT_CANCELED, returnIntent);

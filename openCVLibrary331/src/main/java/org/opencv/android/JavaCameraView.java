@@ -174,8 +174,17 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                         params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
                     }
 
+                    if (params.isZoomSupported() && mCameraPreferedZoom > 0) {
+                        for (int zoom : params.getZoomRatios()) Log.i("terry", "zoom support: " + zoom);
+                        Log.i("terry", "zoom : " + params.getZoom());
+                        //params.setZoom(mCameraPreferedZoom);
+                    }
+                    params.setExposureCompensation(params.getMaxExposureCompensation());
+
                     mCamera.setParameters(params);
                     params = mCamera.getParameters();
+
+                    Log.i("terry", "params : " + params.flatten());
 
                     mFrameWidth = params.getPreviewSize().width;
                     mFrameHeight = params.getPreviewSize().height;

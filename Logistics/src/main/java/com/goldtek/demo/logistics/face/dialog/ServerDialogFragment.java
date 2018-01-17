@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.goldtek.demo.logistics.face.R;
 
@@ -26,9 +27,10 @@ import com.goldtek.demo.logistics.face.R;
 public class ServerDialogFragment extends DialogFragment {
     public final static String KEY_SERVER_RECOGNIZE = "recognize-server-address";
     public final static String KEY_SERVER_PALM = "palm-server-address";
+    public final static String KEY_PLAY_MEDIA = "demo-play-media";
     private String mRecognizeAddr;
     private String mPalmAddr;
-
+    private boolean mPlayMedia;
 
     @Override
     public void onAttach(Context context) {
@@ -38,6 +40,7 @@ public class ServerDialogFragment extends DialogFragment {
 
         mRecognizeAddr = sharedPrefs.getString(KEY_SERVER_RECOGNIZE, "127.0.0.1");
         mPalmAddr = sharedPrefs.getString(KEY_SERVER_PALM, "127.0.0.1");
+        mPlayMedia = sharedPrefs.getBoolean(KEY_PLAY_MEDIA, true);
     }
 
     @Nullable
@@ -55,6 +58,8 @@ public class ServerDialogFragment extends DialogFragment {
         recognizeServer.setText(mRecognizeAddr);
         final TextView palmServer = view.findViewById(R.id.PalmServer);
         palmServer.setText(mPalmAddr);
+        final ToggleButton toggle = view.findViewById(R.id.PlayMedia);
+        toggle.setChecked(mPlayMedia);
 
         setCancelable(false);
 
@@ -70,6 +75,7 @@ public class ServerDialogFragment extends DialogFragment {
                                 SharedPreferences.Editor editor = sharedPrefs.edit();
                                 editor.putString(KEY_SERVER_RECOGNIZE, recognizeServer.getText().toString());
                                 editor.putString(KEY_SERVER_PALM, palmServer.getText().toString());
+                                editor.putBoolean(KEY_PLAY_MEDIA, toggle.isChecked());
                                 editor.commit();
 
                                 getTargetFragment().onActivityResult(getTargetRequestCode(), Activity.RESULT_OK, getActivity().getIntent());

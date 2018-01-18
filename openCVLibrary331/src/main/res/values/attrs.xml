@@ -5,6 +5,7 @@
        <attr name="camera_width" format="integer" />
        <attr name="camera_height" format="integer" />
        <attr name="camera_zoom" format="integer" />
+       <attr name="camera_exposure" format="integer" />
        <attr name="camera_id" format="integer" >
           <enum name="any" value="-1" />
           <enum name="back" value="99" />

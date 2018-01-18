@@ -62,4 +62,33 @@
             android:textOff="Off" />
     </LinearLayout>
 
+    <RadioGroup
+        android:id="@+id/RadioCascade"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/radio_cascade_sample"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/radio_cascade_sample"
+            android:checked="false" />
+
+        <RadioButton
+            android:id="@+id/radio_cascade_win"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/radio_cascade_win"
+            android:checked="true" />
+
+        <RadioButton
+            android:id="@+id/radio_cascade_rockchip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/radio_cascade_rockchip"
+            android:checked="false" />
+
+    </RadioGroup>
+
 </LinearLayout>

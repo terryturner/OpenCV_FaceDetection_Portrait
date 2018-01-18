@@ -49,6 +49,7 @@ import com.goldtek.demo.protocol.client.DummyProtocol;
 import com.goldtek.demo.protocol.client.GtClient;
 import com.goldtek.demo.protocol.client.IClientProtocol;
 
+import static com.goldtek.demo.logistics.face.dialog.ServerDialogFragment.KEY_CASCADE;
 import static com.goldtek.demo.logistics.face.dialog.ServerDialogFragment.KEY_SERVER_RECOGNIZE;
 
 public class IdentifyActivity extends Activity implements CvCameraViewListener2 {
@@ -141,11 +142,29 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
                     // Load native library after(!) OpenCV initialization
                     System.loadLibrary("detection_based_tracker");
 
+                    SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplication());
+                    int resourceID = sharedPrefs.getInt(KEY_CASCADE, R.id.radio_cascade_win);
+                    String filename = "haarcascade_frontalface_alt2.xml";
+                    switch (resourceID) {
+                        case R.id.radio_cascade_sample:
+                            resourceID = org.opencv.samples.facedetect.R.raw.lbpcascade_frontalface;
+                            filename = "lbpcascade_frontalface.xml";
+                            break;
+                        case R.id.radio_cascade_win:
+                            resourceID = org.opencv.samples.facedetect.R.raw.haarcascade_frontalface_alt2;
+                            filename = "haarcascade_frontalface_alt2.xml";
+                            break;
+                        case R.id.radio_cascade_rockchip:
+                            resourceID = org.opencv.samples.facedetect.R.raw.rockchip_cascade_frontalface;
+                            filename = "rockchip_cascade_frontalface.xml";
+                            break;
+                    }
+
                     try {
                         // load cascade file from application resources
-                        InputStream is = getResources().openRawResource(org.opencv.samples.facedetect.R.raw.haarcascade_frontalface_alt2);
+                        InputStream is = getResources().openRawResource(resourceID);
                         File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-                        mCascadeFile = new File(cascadeDir, "haarcascade_frontalface_alt2.xml");
+                        mCascadeFile = new File(cascadeDir, filename);
                         FileOutputStream os = new FileOutputStream(mCascadeFile);
 
                         byte[] buffer = new byte[4096];
@@ -395,6 +414,7 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
             setResult(Activity.RESULT_OK, returnIntent);
             finish();
             */
+            CBroadcast.iocontrollerOpen(this, "Z08");
         } else {
             showWelcome(false);
         }

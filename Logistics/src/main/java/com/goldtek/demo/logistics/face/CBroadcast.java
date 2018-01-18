@@ -83,4 +83,11 @@ public class CBroadcast {
         sendBroadcastImpl(intent);
         Log.d(TAG, "iocontrollerOpen " + msgClientId);
     }
+
+    public static void iocontrollerOpen(Context context, String boxId) {
+        CBroadcast m_objOpen = new CBroadcast(context);
+        if(m_objOpen != null){
+            m_objOpen.iocontrollerOpen("Z08", m_objOpen.genMsgClientId());
+        }
+    }
 }

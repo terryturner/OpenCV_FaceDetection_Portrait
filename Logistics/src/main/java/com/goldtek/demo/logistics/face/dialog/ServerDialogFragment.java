@@ -15,6 +15,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -28,8 +29,10 @@ public class ServerDialogFragment extends DialogFragment {
     public final static String KEY_SERVER_RECOGNIZE = "recognize-server-address";
     public final static String KEY_SERVER_PALM = "palm-server-address";
     public final static String KEY_PLAY_MEDIA = "demo-play-media";
+    public final static String KEY_CASCADE = "cascade_file";
     private String mRecognizeAddr;
     private String mPalmAddr;
+    private int mCascadeResourceID;
     private boolean mPlayMedia;
 
     @Override
@@ -41,6 +44,7 @@ public class ServerDialogFragment extends DialogFragment {
         mRecognizeAddr = sharedPrefs.getString(KEY_SERVER_RECOGNIZE, "127.0.0.1");
         mPalmAddr = sharedPrefs.getString(KEY_SERVER_PALM, "127.0.0.1");
         mPlayMedia = sharedPrefs.getBoolean(KEY_PLAY_MEDIA, true);
+        mCascadeResourceID = sharedPrefs.getInt(KEY_CASCADE, R.id.radio_cascade_win);
     }
 
     @Nullable
@@ -60,6 +64,8 @@ public class ServerDialogFragment extends DialogFragment {
         palmServer.setText(mPalmAddr);
         final ToggleButton toggle = view.findViewById(R.id.PlayMedia);
         toggle.setChecked(mPlayMedia);
+        final RadioGroup cascadeGroup = view.findViewById(R.id.RadioCascade);
+        cascadeGroup.check(mCascadeResourceID);
 
         setCancelable(false);
 
@@ -76,6 +82,7 @@ public class ServerDialogFragment extends DialogFragment {
                                 editor.putString(KEY_SERVER_RECOGNIZE, recognizeServer.getText().toString());
                                 editor.putString(KEY_SERVER_PALM, palmServer.getText().toString());
                                 editor.putBoolean(KEY_PLAY_MEDIA, toggle.isChecked());
+                                editor.putInt(KEY_CASCADE, cascadeGroup.getCheckedRadioButtonId());
                                 editor.commit();
 
                                 getTargetFragment().onActivityResult(getTargetRequestCode(), Activity.RESULT_OK, getActivity().getIntent());

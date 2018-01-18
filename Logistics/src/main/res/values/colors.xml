@@ -13,6 +13,7 @@
     <color name="fancyPanelStart">#FFAB91</color>
     <color name="fancyPanelCenter">#FF5722</color>
     <color name="fancyPanelEnd">#DD2C00</color>
+    <color name="welcome_color">#07FC07</color>
 
     <color name="titlebackgroundcolor">#5584b9</color>
     <color name="titletextcolor">#fbfcfd</color>

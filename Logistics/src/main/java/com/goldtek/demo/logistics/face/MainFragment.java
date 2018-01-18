@@ -64,6 +64,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
     private SurfaceView mSurfaceView;
     private SurfaceHolder mSurfaceHolder;
     private MediaPlayer mMediaPlayer;
+    private int mMediaCurrentPos;
 
 
 
@@ -77,9 +78,6 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
             mArgument = bundle.getString(ARGUMENT);
 
         setHasOptionsMenu(true);
-
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        m_bPlayMedia = sharedPrefs.getBoolean(ServerDialogFragment.KEY_PLAY_MEDIA, true);
     }
 
     @Override
@@ -122,6 +120,12 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
         view.findViewById(R.id.imgAbout).setOnClickListener(this);
         view.findViewById(R.id.imgLogo).setOnClickListener(this);
 
+        mSurfaceView = view.findViewById(R.id.surfaceViewFrame);
+        mSurfaceHolder = mSurfaceView.getHolder();
+        mSurfaceHolder.addCallback(MainFragment.this);
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        m_bPlayMedia = sharedPrefs.getBoolean(ServerDialogFragment.KEY_PLAY_MEDIA, true);
         playMedia(view);
 
         return view;
@@ -153,8 +157,9 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
                 m_bPlayMedia = sharedPrefs.getBoolean(ServerDialogFragment.KEY_PLAY_MEDIA, true);
 
-                if (m_bPlayMedia) playMedia(getView());
-                else releaseMediaPlayer();
+                if (m_bPlayMedia) resumeMediaPlayer();
+                else pauseMediaPlayer();
+
                 fadeButton(true);
                 break;
             case REQUEST_REGISTER:
@@ -210,10 +215,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
             case R.id.click_btn:
                 if (view.getTag() instanceof Integer) {
                     if ((int) view.getTag() == REQUEST_IDENTIFY) {
-                        CBroadcast m_objOpen = new CBroadcast(getContext());
-                        if(m_objOpen != null){
-                            m_objOpen.iocontrollerOpen("Z01", m_objOpen.genMsgClientId());
-                        }
+                        CBroadcast.iocontrollerOpen(getContext(), "Z08");
                     }
                     fadeButton(true);
                 }
@@ -251,17 +253,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
 
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
-        mMediaPlayer = new MediaPlayer();
-        mMediaPlayer.setDisplay(mSurfaceHolder);
-        try {
-            mMediaPlayer.setDataSource(getContext(), mVideo_uri);
-            mMediaPlayer.prepare();
-            mMediaPlayer.setOnPreparedListener(MainFragment.this);
-            mMediaPlayer.setLooping(true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        setVideoSize();
+        resumeMediaPlayer();
     }
 
     @Override
@@ -294,9 +286,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
 
         if (m_bPlayMedia && m_bVideofile) {
             view.findViewById(R.id.root).setBackgroundResource(R.drawable.gradient_skyblue2);
-            mSurfaceView = view.findViewById(R.id.surfaceViewFrame);
-            mSurfaceHolder = mSurfaceView.getHolder();
-            mSurfaceHolder.addCallback(MainFragment.this);
+            view.findViewById(R.id.surfaceViewFrame).setVisibility(View.VISIBLE);
         } else {
             view.findViewById(R.id.root).setBackgroundResource(R.drawable.gradient_skyblue1);
             view.findViewById(R.id.surfaceViewFrame).setVisibility(View.INVISIBLE);
@@ -307,6 +297,33 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
         if (mMediaPlayer != null) {
             mMediaPlayer.release();
             mMediaPlayer = null;
+        }
+    }
+
+    private void resumeMediaPlayer() {
+        if (mMediaPlayer != null)
+            mMediaPlayer.seekTo(mMediaCurrentPos);
+        else {
+            if (m_bPlayMedia && m_bVideofile) {
+                mMediaPlayer = new MediaPlayer();
+                mMediaPlayer.setDisplay(mSurfaceHolder);
+                try {
+                    mMediaPlayer.setDataSource(getContext(), mVideo_uri);
+                    mMediaPlayer.prepare();
+                    mMediaPlayer.setOnPreparedListener(MainFragment.this);
+                    mMediaPlayer.setLooping(true);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                setVideoSize();
+            }
+        }
+    }
+
+    private void pauseMediaPlayer() {
+        if (mMediaPlayer != null) {
+            mMediaPlayer.pause();
+            mMediaCurrentPos = mMediaPlayer.getCurrentPosition();
         }
     }
 

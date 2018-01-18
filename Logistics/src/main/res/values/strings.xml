@@ -12,6 +12,9 @@
     <string name="btn_setting">Setting</string>
     <string name="dialog_pass">Pass</string>
     <string name="dialog_fail">Fail</string>
+    <string name="radio_cascade_sample">Sample</string>
+    <string name="radio_cascade_win">Haar</string>
+    <string name="radio_cascade_rockchip">Rockchip</string>
 
 
     <!-- Toast Messages -->

@@ -54,6 +54,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
     protected int mCameraPreferedWidth = -1;
     protected int mCameraPreferedHeight = -1;
     protected int mCameraPreferedZoom = -1;
+    protected int mCameraPreferedExposure = -1;
     protected boolean mEnabled;
     protected FpsMeter mFpsMeter = null;
 
@@ -85,6 +86,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
         mCameraPreferedWidth = styledAttrs.getInt(R.styleable.CameraBridgeViewBase_camera_width, -1);
         mCameraPreferedHeight = styledAttrs.getInt(R.styleable.CameraBridgeViewBase_camera_height, -1);
         mCameraPreferedZoom = styledAttrs.getInt(R.styleable.CameraBridgeViewBase_camera_zoom, -1);
+        mCameraPreferedExposure = styledAttrs.getInt(R.styleable.CameraBridgeViewBase_camera_exposure, -1);
 
         getHolder().addCallback(this);
         mMaxWidth = MAX_UNSPECIFIED;

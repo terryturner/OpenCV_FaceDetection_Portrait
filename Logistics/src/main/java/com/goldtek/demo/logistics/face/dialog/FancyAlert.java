@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -13,6 +14,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.goldtek.demo.logistics.face.CBroadcast;
+import com.goldtek.demo.logistics.face.MainFragment;
 import com.goldtek.demo.logistics.face.R;
 
 /**
@@ -50,7 +53,10 @@ public class FancyAlert extends Dialog implements
         if (mBuilder.mIconRes != -1) ((ImageView)findViewById(R.id.fancy_icon)).setImageResource(mBuilder.mIconRes);
         if (mBuilder.mTitle != null) ((TextView)findViewById(R.id.title)).setText(mBuilder.mTitle);
         if (mBuilder.mMessage != null) ((TextView)findViewById(R.id.message)).setText(mBuilder.mMessage);
-        if (mBuilder.mClickMessage != null) ((Button)findViewById(R.id.click_btn)).setText(mBuilder.mClickMessage);
+        if (mBuilder.mClickMessage != null)
+            ((Button)findViewById(R.id.click_btn)).setText(mBuilder.mClickMessage);
+        else
+            ((Button)findViewById(R.id.click_btn)).setVisibility(View.GONE);
         if (mBuilder.mClick != null) mClickListener = mBuilder.mClick;
         if (mBuilder.mEventId > 0) mEventID = mBuilder.mEventId;
 
@@ -111,10 +117,28 @@ public class FancyAlert extends Dialog implements
             return FancyAlert.getInstance(this, act);
         }
 
-        public FancyAlert show(Activity act, int eventId) {
-            FancyAlert dialog = create(act, eventId);
+        public FancyAlert show(final Activity act, final int eventId) {
+            final FancyAlert dialog = create(act, eventId);
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             dialog.show();
+
+
+
+                new CountDownTimer(3000, 1000) {
+                    @Override
+                    public void onTick(long millisUntilFinished) {
+                    }
+
+                    @Override
+                    public void onFinish() {
+                        dialog.dismiss();
+                        if (eventId == MainFragment.REQUEST_IDENTIFY) {
+                            CBroadcast.iocontrollerOpen(act, "Z08");
+                        }
+                    }
+                }.start();
+
+
             return dialog;
         }
     }

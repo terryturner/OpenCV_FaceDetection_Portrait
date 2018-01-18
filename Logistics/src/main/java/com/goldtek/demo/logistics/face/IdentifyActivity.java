@@ -406,17 +406,17 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
             mIdentifiedDone = true;
 
             ((TextView)findViewById(R.id.welcome_name_text)).setText(name);
-            showWelcome(true);
+            //showWelcome(true);
+            //CBroadcast.iocontrollerOpen(this, "Z08");
 
-            /*
             Intent returnIntent = new Intent();
             returnIntent.putExtra(KEY_NAME, name);
             setResult(Activity.RESULT_OK, returnIntent);
             finish();
-            */
-            CBroadcast.iocontrollerOpen(this, "Z08");
+
+
         } else {
-            showWelcome(false);
+            //showWelcome(false);
         }
         mIdentifiedFrame++;
         mIdentifiedFrameText.setText(String.valueOf(mIdentifiedFrame));

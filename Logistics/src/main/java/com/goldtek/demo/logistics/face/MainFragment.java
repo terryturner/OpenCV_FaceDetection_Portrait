@@ -46,11 +46,11 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
     private static final String SETTING_SERVER = "config_server_dialog";
     private static final String ABOUT = "about_dialog";
     private static final String USAGE_WARNING = "usage_warning_dialog";
-    private static final int REQUEST_PROFILE_CREATE = 0X110;
-    private static final int REQUEST_REGISTER = 0X112;
-    private static final int REQUEST_IDENTIFY = 0X113;
-    private static final int REQUEST_SETTING = 0X114;
-    private static final int REQUEST_OTHER = 0X199;
+    public static final int REQUEST_PROFILE_CREATE = 0X110;
+    public static final int REQUEST_REGISTER = 0X112;
+    public static final int REQUEST_IDENTIFY = 0X113;
+    public static final int REQUEST_SETTING = 0X114;
+    public static final int REQUEST_OTHER = 0X199;
 
     public static final String ARGUMENT ="argument";
     public static final String RESPONSE = "response";
@@ -168,14 +168,14 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                 String title;
                 if (resultCode == Activity.RESULT_OK) {
                     if (requestCode == REQUEST_REGISTER) title = "Register";
-                    else title = String.format("Validate %s", data.getStringExtra(IdentifyActivity.KEY_NAME));
+                    else title = String.format("Welcome %s", data.getStringExtra(IdentifyActivity.KEY_NAME));
 
                     new FancyAlert.Builder()
                         .setIconResource(R.drawable.tick_green)
                         .setTitle(title)
                         .setMessage(getString(R.string.dialog_pass))
-                        .setClickMessage(getString(R.string.btn_ok))
-                        .setOnClickListener(this)
+                        //.setClickMessage(getString(R.string.btn_ok))
+                        //.setOnClickListener(this)
                         .show(getActivity(), (requestCode == REQUEST_IDENTIFY) ? REQUEST_IDENTIFY : REQUEST_OTHER);
                 } else {
                     if (requestCode == REQUEST_REGISTER) title = "Register";
@@ -185,8 +185,8 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                         .setIconResource(R.drawable.fail_red)
                         .setTitle(title)
                         .setMessage(getString(R.string.dialog_fail))
-                        .setClickMessage(getString(R.string.btn_ok))
-                        .setOnClickListener(this)
+                        //.setClickMessage(getString(R.string.btn_ok))
+                        //.setOnClickListener(this)
                         .show(getActivity(), REQUEST_OTHER);
                 }
                 break;
@@ -225,8 +225,8 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                 showDialog(ABOUT);
                 break;
             case R.id.imgLogo:
-                //startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);
-                startActivity(new Intent(getContext(), IdentifyActivity.class));
+                startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);
+                //startActivity(new Intent(getContext(), IdentifyActivity.class));
                 break;
         }
     }
@@ -238,8 +238,8 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                 showDialog(PROFILE_CREATE);
                 break;
             case REQUEST_IDENTIFY:
-                //startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);
-                startActivity(new Intent(getContext(), IdentifyActivity.class));
+                startActivityForResult(new Intent(getContext(), IdentifyActivity.class), REQUEST_IDENTIFY);
+                //startActivity(new Intent(getContext(), IdentifyActivity.class));
                 break;
         }
     }

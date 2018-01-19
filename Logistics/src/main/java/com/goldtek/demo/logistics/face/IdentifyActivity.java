@@ -397,27 +397,20 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
     private void onIdentify(boolean finish, String name) {
         Log.i(TAG, "onIdentify " + mIdentifiedFrame + ": " + name);
 
-        if (mIdentifiedFrame > 10 || mProtocol == null) {
+        if (finish && !name.equalsIgnoreCase(IClientProtocol.RESULT.UNKNOWN)) {
             mIdentifiedDone = true;
-            Intent returnIntent = new Intent();
-            setResult(Activity.RESULT_CANCELED, returnIntent);
-            finish();
-        } else if (finish && !name.equalsIgnoreCase(IClientProtocol.RESULT.UNKNOWN)) {
-            mIdentifiedDone = true;
-
-            ((TextView)findViewById(R.id.welcome_name_text)).setText(name);
-            //showWelcome(true);
-            //CBroadcast.iocontrollerOpen(this, "Z08");
 
             Intent returnIntent = new Intent();
             returnIntent.putExtra(KEY_NAME, name);
             setResult(Activity.RESULT_OK, returnIntent);
             finish();
-
-
-        } else {
-            //showWelcome(false);
+        } else if (mIdentifiedFrame > 10 || mProtocol == null) {
+            mIdentifiedDone = true;
+            Intent returnIntent = new Intent();
+            setResult(Activity.RESULT_CANCELED, returnIntent);
+            finish();
         }
+
         mIdentifiedFrame++;
         mIdentifiedFrameText.setText(String.valueOf(mIdentifiedFrame));
         mHandler.sendEmptyMessage(SET_PROGRESS_INVISIBLE);

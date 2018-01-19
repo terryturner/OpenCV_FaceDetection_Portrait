@@ -189,6 +189,8 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                         //.setOnClickListener(this)
                         .show(getActivity(), REQUEST_OTHER);
                 }
+
+                fadeButton(true);
                 break;
         }
         getActivity().getIntent().putExtra(KEY_STATE, REQUEST_PROFILE_CREATE);

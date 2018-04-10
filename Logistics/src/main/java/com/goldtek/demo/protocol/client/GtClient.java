@@ -330,7 +330,7 @@ public class GtClient implements IClientProtocol {
     //==============================================================================================
 
     private String ComposeAuth(String szCmd, String szName, String szID){
-        String szInfo = String.format("<Info><cmd>%s</cmd><name>%s</name><id>%s</id></Info>",
+        String szInfo = String.format("<GOLDTEK><info><cmd>%s</cmd><name>%s</name><id>%s</id></info></GOLDTEK>",
                 szCmd, szName, szID);
         return szInfo;
     }

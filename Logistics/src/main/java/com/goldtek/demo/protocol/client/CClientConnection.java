@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
  * 1. REGISTER
  *      example:
  *      // Authorization
- *          send: <Info><cmd>REGISTER</cmd><name>Fred</name><id>Fred</id></Info>
+ *          send: <GOLDTEK><info><cmd>REGISTER</cmd><name>Fred</name><id>Fred</id></info><solution></solution></GOLDTEK>
  *          recv_Success: <GOLDTEK><info>REGISTER</info><result>1</result></GOLDTEK>
  *          recv_Failed: <GOLDTEK><info>REGISTER</info><result>-1</result></GOLDTEK>
  *
@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  * 2. LOGIN
  *      example:
  *      // Authorization
- *          send: <Info><cmd>LOGIN</cmd><name>Fred</name><id>Fred</id></Info>
+ *          send: <GOLDTEK><info><cmd>LOGIN</cmd><name>Fred</name><id>Fred</id></info><solution></solution></GOLDTEK>
  *          recv_Success: <GOLDTEK><info>LOGIN</info><result>1</result></GOLDTEK>
  *          recv_Failed: <GOLDTEK><info>LOGIN</info><result>-1</result></GOLDTEK>
  *
@@ -298,7 +298,7 @@ public class CClientConnection extends Thread implements Runnable, IClientProtoc
     //==============================================================================================
 
     private String ComposeAuth(String szCmd, String szName, String szID){
-        String szInfo = String.format("<Info><cmd>%s</cmd><name>%s</name><id>%s</id></Info>",
+        String szInfo = String.format("<GOLDTEK><info><cmd>%s</cmd><name>%s</name><id>%s</id></info></GOLDTEK>",
                 szCmd, szName, szID);
         return szInfo;
     }

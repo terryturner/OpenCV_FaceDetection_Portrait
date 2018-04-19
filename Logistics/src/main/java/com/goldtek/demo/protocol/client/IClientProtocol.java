@@ -32,6 +32,15 @@ public interface IClientProtocol {
         public static final String ERR   = "ERROR";
         public static final String OTHER  = "OTHER";
     }
+    class SVRSOLUTION {
+        public static final int SOL_TENSORFLOW = 0;
+        public static final int SOL_LBPH = 2;
+        public static final int SOL_LBPHIST = 3;
+    }
+    class SVRSOLTYPE {
+        public static final int RECV_PICTURE = 0;
+        public static final int RECV_FEATURE = 1;
+    }
 
     void start();
     void onStop();

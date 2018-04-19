@@ -6,13 +6,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
-import android.graphics.Typeface;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -32,7 +29,6 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.samples.facedetect.DetectionBasedTracker;
@@ -48,7 +44,7 @@ import com.github.ybq.android.spinkit.SpinKitView;
 import com.goldtek.demo.protocol.client.CClientConnection;
 import com.goldtek.demo.protocol.client.DummyProtocol;
 import com.goldtek.demo.protocol.client.GtClient;
-import com.goldtek.demo.protocol.client.GtClientContentType;
+import com.goldtek.demo.protocol.client.GtFRSolution;
 import com.goldtek.demo.protocol.client.IClientProtocol;
 
 import static com.goldtek.demo.logistics.face.dialog.ServerDialogFragment.KEY_CASCADE;
@@ -71,7 +67,7 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
     private File                   mCascadeFile;
     private CascadeClassifier      mJavaDetector;
     private DetectionBasedTracker  mNativeDetector;
-    private GtClientContentType    mContentType = GtClientContentType.PyTensor;
+    private GtFRSolution mSolution = GtFRSolution.PyTensor;
 
     private int                    mDetectorType       = JAVA_DETECTOR;
     private String[]               mDetectorName;
@@ -150,10 +146,10 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
                     int protocolID = sharedPrefs.getInt(KEY_FRSOLUTION, R.id.radio_image);
                     switch (protocolID) {
                         case R.id.radio_image:
-                            mContentType = GtClientContentType.PyTensor;
+                            mSolution = GtFRSolution.PyTensor;
                             break;
                         case R.id.radio_lbp:
-                            mContentType = GtClientContentType.LBPHIST;
+                            mSolution = GtFRSolution.LBPHIST;
                             break;
                     }
 
@@ -207,6 +203,9 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
                     }
 
                     mOpenCvCameraView.enableView();
+
+                    Release();
+                    CreateNew();
                 } break;
                 default:
                 {
@@ -278,8 +277,6 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
 
-        Release();
-        CreateNew();
     }
 
     @Override
@@ -338,7 +335,7 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
             tempMat = mGray.submat(cy - dy, cy + dy, cx - dx, cx + dx);
 
             if (mNativeDetector != null) {
-                switch (mContentType) {
+                switch (mSolution) {
                     case PyTensor:
                         mNativeDetector.detect(tempMat, faces);
                         mGray.release();
@@ -469,10 +466,8 @@ public class IdentifyActivity extends Activity implements CvCameraViewListener2 
 
         if(mProtocol == null) {
             if (FLAG_DEBUG) mProtocol = new DummyProtocol(mHandler, IClientProtocol.CMDTYPE.LOGIN);
-            else mProtocol = new GtClient
-                    (mHandler, -1, mServerAddr,
-                    IClientProtocol.CMDTYPE.LOGIN,
-                    "", "");
+            else mProtocol = new GtClient(mHandler, -1, mServerAddr, mSolution,
+                    IClientProtocol.CMDTYPE.LOGIN,"", "", 30);
             mProtocol.start();
         }
     }

@@ -23,7 +23,7 @@ import java.util.Vector;
  * 1. REGISTER
  *      example:
  *      // Authorization
- *          send: <Info><cmd>REGISTER</cmd><name>Fred</name><id>Fred</id></Info>
+ *          send: <GOLDTEK><service>SERVICE_ME</service><cmd>REGISTER</cmd><name>Fred</name><id>Fred</id><info><regnum>10</regnum><type>0</type><solution>0</solution></info></GOLDTEK>
  *          recv_Success: <GOLDTEK><info>REGISTER</info><result>1</result></GOLDTEK>
  *          recv_Failed: <GOLDTEK><info>REGISTER</info><result>-1</result></GOLDTEK>
  *
@@ -43,6 +43,7 @@ import java.util.Vector;
  * 2. LOGIN
  *      example:
  *      // Authorization
+ *          send: <GOLDTEK><service>SERVICE_ME</service><cmd>LOGIN</cmd><name></name><id></id><info><regnum>0</regnum><type>0</type><solution>0</solution></info></GOLDTEK>
  *          send: <Info><cmd>LOGIN</cmd><name>Fred</name><id>Fred</id></Info>
  *          recv_Success: <GOLDTEK><info>LOGIN</info><result>1</result></GOLDTEK>
  *          recv_Failed: <GOLDTEK><info>LOGIN</info><result>-1</result></GOLDTEK>
@@ -69,9 +70,11 @@ public class GtClient implements IClientProtocol {
     private String m_szSvrIP;
 
     private Socket m_socket = null;
+    private GtFRSolution m_ezSolution;
     private String m_szCmd;
     private String m_szName;
     private String m_szID;
+    private int    m_izRegNum = 0;
 
     private Handler m_Handler;
     private Listener mListener = new Listener();
@@ -86,18 +89,37 @@ public class GtClient implements IClientProtocol {
      * @param handler handler interface for callback
      * @param nPort Server Port Number
      * @param szSvrIP Server IP Address
+     * @param eType Server Solution
      * @param szCmd use CMDTYPE.REG or CMDTYPE.LOGIN
      * @param szName Client Name
      * @param szID Client ID
      */
-    public GtClient(Handler handler, int nPort, String szSvrIP, String szCmd,
+    public GtClient(Handler handler, int nPort, String szSvrIP, GtFRSolution eType, String szCmd,
                     String szName, String szID){
         this.m_Handler = handler;
         this.m_nPort    = (nPort > 0) ? nPort : PORT;
         this.m_szSvrIP  = szSvrIP;
+        this.m_ezSolution = eType;
         this.m_szCmd    = szCmd;
         this.m_szName   = szName;
         this.m_szID     = szID;
+    }
+
+    /**
+     *
+     * @param handler handler interface for callback
+     * @param nPort Server Port Number
+     * @param szSvrIP Server IP Address
+     * @param eType Server Solution
+     * @param szCmd use CMDTYPE.REG or CMDTYPE.LOGIN
+     * @param szName Client Name
+     * @param szID Client ID
+     * @param izRegNum count of registered frame
+     */
+    public GtClient(Handler handler, int nPort, String szSvrIP, GtFRSolution eType, String szCmd,
+                    String szName, String szID, int izRegNum) {
+        this(handler, nPort, szSvrIP, eType, szCmd, szName, szID);
+        this.m_izRegNum = izRegNum;
     }
 
     public void start() {
@@ -265,9 +287,31 @@ public class GtClient implements IClientProtocol {
             m_bRunning = true;
             // Send Handler status
             callback_Status(true);
-            String szMsg = ComposeAuth(m_szCmd, m_szName, m_szID);
-            Log.d(TAG, "--> " + szMsg);
-            ret = mSender.Sending(szMsg.getBytes());
+            int type = -1;
+            int sol = -1;
+            switch (m_ezSolution) {
+                case PyTensor:
+                    type = SVRSOLTYPE.RECV_PICTURE;
+                    sol = SVRSOLUTION.SOL_TENSORFLOW;
+                    break;
+                case PyTensorFV:
+                    type = SVRSOLTYPE.RECV_FEATURE;
+                    sol = SVRSOLUTION.SOL_TENSORFLOW;
+                    break;
+                case LBPH:
+                    type = SVRSOLTYPE.RECV_PICTURE;
+                    sol = SVRSOLUTION.SOL_LBPH;
+                    break;
+                case LBPHIST:
+                    type = SVRSOLTYPE.RECV_FEATURE;
+                    sol = SVRSOLUTION.SOL_LBPHIST;
+                    break;
+            }
+            if (type >= 0 && sol >= 0) {
+                String szMsg = ComposeAuth(m_szCmd, m_szName, m_szID, m_izRegNum, type, sol);
+                Log.d(TAG, "--> " + szMsg);
+                ret = mSender.Sending(szMsg.getBytes());
+            }
         } catch (IOException e) {
             // Send Handler status
             callback_Status(false);
@@ -338,9 +382,10 @@ public class GtClient implements IClientProtocol {
 
     //==============================================================================================
 
-    private String ComposeAuth(String szCmd, String szName, String szID){
-        String szInfo = String.format("<GOLDTEK><info><cmd>%s</cmd><name>%s</name><id>%s</id></info></GOLDTEK>",
-                szCmd, szName, szID);
+    private String ComposeAuth(String szCmd, String szName, String szID, int regNum, int szType, int szSolution){
+        String szInfo = String.format("<GOLDTEK><service>M</service><cmd>%s</cmd><name>%s</name><id>%s</id>" +
+                        "<info><regnum>%d</regnum><type>%d</type><solution>%d</solution></info></GOLDTEK>",
+                szCmd, szName, szID, regNum, szType, szSolution);
         return szInfo;
     }
 

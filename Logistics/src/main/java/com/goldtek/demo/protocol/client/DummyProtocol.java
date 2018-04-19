@@ -9,6 +9,8 @@ import android.util.Log;
 import com.goldtek.demo.logistics.face.Utils;
 import com.goldtek.demo.protocol.client.IClientProtocol;
 
+import java.util.Vector;
+
 /**
  * Created by Terry on 2017/12/25 0025.
  */
@@ -83,6 +85,12 @@ public class DummyProtocol implements IClientProtocol {
         //mBitmap = bmp.copy(bmp.getConfig(), true);
 
         return true;
+    }
+
+    @Override
+    public boolean sendVector(Vector<Float> features) {
+        m_bProcess = true;
+        return false;
     }
 
     @Override

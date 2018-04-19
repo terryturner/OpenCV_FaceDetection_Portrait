@@ -11,7 +11,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.regex.Pattern;
+import java.util.Arrays;
+import java.util.Vector;
 
 /**
  * Created by darwinhu on 2017/12/25.
@@ -231,8 +232,16 @@ public class GtClient implements IClientProtocol {
     }
 
     public boolean sendImage(String szName, Bitmap bmp) {
-        DataPacket oPacket = new DataPacket(m_szID, szName, bmp);
-        mSender.Sending(oPacket.getM_data());
+        ImageDataPacket oPacket = new ImageDataPacket(m_szID, szName, bmp);
+        mSender.Sending(oPacket.getByteArray());
+        return true;
+    }
+
+    public boolean sendVector(Vector<Float> features) {
+        VectorDataPacket oPacket = new VectorDataPacket(m_szID, String.format("login_%d", System.currentTimeMillis()), features);
+        Log.i(TAG, "vector: " + Arrays.toString(oPacket.getByteArray()));
+        mSender.Sending(oPacket.getByteArray());
+
         return true;
     }
 

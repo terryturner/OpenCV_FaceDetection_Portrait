@@ -15,7 +15,8 @@ else
   include C:/OpenCV-android-sdk-3.3.1/sdk/native/jni/OpenCV.mk
 endif
 
-LOCAL_SRC_FILES  := DetectionBasedTracker_jni.cpp
+MY_CPP_LIST := $(wildcard $(LOCAL_PATH)/*.cpp)
+LOCAL_SRC_FILES := $(MY_CPP_LIST:$(LOCAL_PATH)/%=%)
 LOCAL_C_INCLUDES += $(LOCAL_PATH)
 LOCAL_LDLIBS     += -llog -ldl
 

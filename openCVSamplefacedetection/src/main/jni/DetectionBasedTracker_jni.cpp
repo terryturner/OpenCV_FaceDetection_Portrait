@@ -1,6 +1,11 @@
 #include <DetectionBasedTracker_jni.h>
+#include <histogram.hpp>
+#include <lbp.hpp>
+
 #include <opencv2/core.hpp>
+#include "opencv2/imgproc/imgproc.hpp"
 #include <opencv2/objdetect.hpp>
+#include "opencv2/opencv.hpp"
 
 #include <string>
 #include <vector>
@@ -9,9 +14,17 @@
 
 #define LOG_TAG "FaceDetection/DetectionBasedTracker"
 #define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
+#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__))
+
+#define CELL_SIZE   32
+#define FRAME_SIZE 164
+#define DEFAULT_LBP_R 2
+#define DEFAULT_LBP_P 8
+
 
 using namespace std;
 using namespace cv;
+using namespace lbp;
 
 inline void vector_Rect_to_Mat(vector<Rect>& v_rect, Mat& mat)
 {
@@ -248,4 +261,62 @@ JNIEXPORT void JNICALL Java_org_opencv_samples_facedetect_DetectionBasedTracker_
         jenv->ThrowNew(je, "Unknown exception in JNI code DetectionBasedTracker.nativeDetect()");
     }
     LOGD("Java_org_opencv_samples_facedetect_DetectionBasedTracker_nativeDetect END");
+}
+
+JNIEXPORT void JNICALL Java_org_opencv_samples_facedetect_DetectionBasedTracker_nativeDetectLBPHIST
+        (JNIEnv * jenv, jclass, jlong thiz, jlong image, jlong fVector)
+{
+    try
+    {
+        vector<Rect> RectFaces;
+        Mat& srcImage = *(Mat*) image;
+        Mat& dstVector = *(Mat*) fVector;
+        ((DetectorAgregator*)thiz)->tracker->process(srcImage);
+        ((DetectorAgregator*)thiz)->tracker->getObjects(RectFaces);
+
+        if (RectFaces.size() <= 0) return;
+        LOGD("run cut");
+        // check the box within the image plane
+        if (0 <= RectFaces.at(0).x
+            && 0 <= RectFaces.at(0).width
+            && RectFaces.at(0).x + RectFaces.at(0).width <= srcImage.cols
+            && 0 <= RectFaces.at(0).y
+            && 0 <= RectFaces.at(0).height
+            && RectFaces.at(0).y + RectFaces.at(0).height <= srcImage.rows){
+            // box within the image plane
+            //Mat region(iOrig, box);
+            Mat face(srcImage, RectFaces.at(0));
+            //Mat face = srcImage(RectFaces.at(0));
+
+            Mat scaleFace;
+            LOGD("run resize");
+            resize(face, scaleFace, Size(FRAME_SIZE, FRAME_SIZE), 1.0, 1.0, INTER_CUBIC);
+            LOGD("run elbp");
+            lbp::ELBP(scaleFace, srcImage, DEFAULT_LBP_R, DEFAULT_LBP_P);
+
+            if (srcImage.empty()) return;
+            LOGD("run hist");
+            lbp::spatial_histogram(srcImage, dstVector,
+                                   static_cast<int>(std::pow(2.0, static_cast<double>(DEFAULT_LBP_P))),
+                                   Size(CELL_SIZE, CELL_SIZE), true, 0);
+        }
+        else{
+            // box out of image plane, do something...
+        }
+
+    }
+    catch(cv::Exception& e)
+    {
+        LOGD("getLBPHIST caught cv::Exception: %s", e.what());
+        jclass je = jenv->FindClass("org/opencv/core/CvException");
+        if(!je)
+            je = jenv->FindClass("java/lang/Exception");
+        jenv->ThrowNew(je, e.what());
+    }
+    catch (...)
+    {
+        LOGD("getLBPHIST caught unknown exception");
+        jclass je = jenv->FindClass("java/lang/Exception");
+        jenv->ThrowNew(je, "Unknown exception in JNI code DetectionBasedTracker.nativeDetect()");
+    }
 }

@@ -38,14 +38,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.util.Vector;
 
 import com.github.ybq.android.spinkit.SpinKitView;
 import com.goldtek.demo.protocol.client.CClientConnection;
 import com.goldtek.demo.protocol.client.DummyProtocol;
 import com.goldtek.demo.protocol.client.GtClient;
+import com.goldtek.demo.protocol.client.GtClientContentType;
 import com.goldtek.demo.protocol.client.IClientProtocol;
 
 import static com.goldtek.demo.logistics.face.dialog.ServerDialogFragment.KEY_CASCADE;
+import static com.goldtek.demo.logistics.face.dialog.ServerDialogFragment.KEY_FRSOLUTION;
 import static com.goldtek.demo.logistics.face.dialog.ServerDialogFragment.KEY_SERVER_RECOGNIZE;
 
 public class RegisterActivity extends Activity implements CvCameraViewListener2 {
@@ -56,7 +59,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
     private static final int       SET_SENDING_PROGRESS_VISIBLE = 0x110;
     private static final int       SET_SENDING_PROGRESS_INVISIBLE = 0x111;
     private static final int       SET_LEARNING_PROGRESS_VISIBLE = 0x112;
-    public static final int        REGISTER_LIMIT      = 10;
+    public static final int        REGISTER_LIMIT      = 30;
     public static final String     KEY_NAME            = "register_name";
     public static final String     KEY_LEVEL           = "register_level";
     public static final int        JAVA_DETECTOR       = 0;
@@ -67,6 +70,7 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
     private File                   mCascadeFile;
     private CascadeClassifier      mJavaDetector;
     private DetectionBasedTracker  mNativeDetector;
+    private GtClientContentType mContentType = GtClientContentType.PyTensor;
 
     private int                    mDetectorType       = NATIVE_DETECTOR;
     private String[]               mDetectorName;
@@ -154,6 +158,17 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
                     System.loadLibrary("detection_based_tracker");
 
                     SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplication());
+                    int protocolID = sharedPrefs.getInt(KEY_FRSOLUTION, R.id.radio_image);
+                    switch (protocolID) {
+                        case R.id.radio_image:
+                            mContentType = GtClientContentType.PyTensor;
+                            break;
+                        case R.id.radio_lbp:
+                            mContentType = GtClientContentType.LBPHIST;
+                            break;
+                    }
+
+
                     int resourceID = sharedPrefs.getInt(KEY_CASCADE, R.id.radio_cascade_win);
                     String filename = "haarcascade_frontalface_alt2.xml";
                     switch (resourceID) {
@@ -337,6 +352,72 @@ public class RegisterActivity extends Activity implements CvCameraViewListener2 
             int dy = (int) (mGray.rows() * mRestrictBox.getDistanceRatioY());
 
             tempMat = mGray.submat(cy - dy, cy + dy, cx - dx, cx + dx);
+
+            if (mNativeDetector != null) {
+                switch (mContentType) {
+                    case PyTensor:
+                        mNativeDetector.detect(tempMat, faces);
+                        mGray.release();
+                        tempMat.release();
+
+
+                        Rect[] facesArray = faces.toArray();
+                        if (facesArray.length > 0) {
+                            isExistFace = true;
+                            tempMat = mRgba.clone();
+                        }
+                        for (Rect rect: facesArray) {
+                            rect.x += (cy - dy);
+                            rect.y += (cx - dx);
+                            Imgproc.rectangle(mRgba, rect.tl(), rect.br(), FACE_RECT_COLOR, 3);
+                        }
+
+
+                        if (isExistFace)
+                        {
+                            Core.flip(tempMat, tempMat, 1);
+
+                            Utils.matToBitmap(tempMat, mCacheBitmap);
+                            //Bitmap resized = Bitmap.createScaledBitmap(mCacheBitmap, 480, 640, true);
+
+                            Rect resizeRect = new Rect(facesArray[0].x - 50, facesArray[0].y - 50, facesArray[0].width + 100, facesArray[0].height + 100);
+                            Mat cropped = new Mat(tempMat, resizeRect);
+                            Bitmap resized = Bitmap.createBitmap(cropped.width(), cropped.height(), Bitmap.Config.ARGB_8888);
+                            Utils.matToBitmap(cropped, resized);
+                            if(mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing() &&
+                                    !mProtocol.sendImage(String.format("%s_%d", mRegisterID, System.currentTimeMillis()), resized)) {
+                                Release();
+                                // TODO: error happened! tip some msg for user
+                                finish();
+                            }
+                            resized.recycle();
+                            cropped.release();
+                            tempMat.release();
+                            if (mSendFrame < REGISTER_LIMIT) mHandler.sendEmptyMessage(SET_SENDING_PROGRESS_VISIBLE);
+                        }
+                        break;
+                    case LBPHIST:
+                        Mat input = tempMat.clone();
+                        Mat output = new Mat();
+                        //TODO: try catch
+                        mNativeDetector.getVecOfLBPHIST(input,output);
+                        if (output != null && output.size().width == 4096 && output.size().height == 1) {
+                            //Log.i(TAG, "mat: " + output.dump());
+                            Vector<Float> features = new Vector<>();
+                            for (int i=0; i<4096; i++) features.add((float) output.get(0, i)[0]);
+                            if(mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing() &&
+                                    !mProtocol.sendVector(features)) {
+                                //Log.i(TAG, "vec: " + features.toString());
+                                Release();
+                                // TODO: error happened!
+                            }
+                        } else {
+                            Log.i(TAG, "no face");
+                        }
+                        break;
+                }
+            }
+
             if (mNativeDetector != null) mNativeDetector.detect(tempMat, faces);
             mGray.release();
             tempMat.release();

@@ -2,6 +2,8 @@ package com.goldtek.demo.protocol.client;
 
 import android.graphics.Bitmap;
 
+import java.util.Vector;
+
 /**
  * Created by Terry on 2018/1/3 0003.
  */
@@ -34,6 +36,7 @@ public interface IClientProtocol {
     void start();
     void onStop();
     boolean sendImage(String szName, Bitmap bmp);
+    boolean sendVector(Vector<Float> features);
     boolean isReady();
     boolean isProcessing();
 

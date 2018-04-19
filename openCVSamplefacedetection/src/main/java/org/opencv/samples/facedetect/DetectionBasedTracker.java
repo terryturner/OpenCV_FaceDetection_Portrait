@@ -25,6 +25,10 @@ public class DetectionBasedTracker
         nativeDetect(mNativeObj, imageGray.getNativeObjAddr(), faces.getNativeObjAddr());
     }
 
+    public void getVecOfLBPHIST(Mat image, Mat vec) {
+        nativeDetectLBPHIST(mNativeObj, image.getNativeObjAddr(), vec.getNativeObjAddr());
+    }
+
     public void release() {
         nativeDestroyObject(mNativeObj);
         mNativeObj = 0;
@@ -38,4 +42,5 @@ public class DetectionBasedTracker
     private static native void nativeStop(long thiz);
     private static native void nativeSetFaceSize(long thiz, int size);
     private static native void nativeDetect(long thiz, long inputImage, long faces);
+    private static native void nativeDetectLBPHIST(long thiz, long inputImage, long outputVector);
 }

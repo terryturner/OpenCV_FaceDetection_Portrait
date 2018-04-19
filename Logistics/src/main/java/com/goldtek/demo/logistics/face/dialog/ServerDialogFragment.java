@@ -30,9 +30,11 @@ public class ServerDialogFragment extends DialogFragment {
     public final static String KEY_SERVER_PALM = "palm-server-address";
     public final static String KEY_PLAY_MEDIA = "demo-play-media";
     public final static String KEY_CASCADE = "cascade_file";
+    public final static String KEY_FRSOLUTION = "fr_solution";
     private String mRecognizeAddr;
     private String mPalmAddr;
     private int mCascadeResourceID;
+    private int mProtocolID;
     private boolean mPlayMedia;
 
     @Override
@@ -45,6 +47,7 @@ public class ServerDialogFragment extends DialogFragment {
         mPalmAddr = sharedPrefs.getString(KEY_SERVER_PALM, "127.0.0.1");
         mPlayMedia = sharedPrefs.getBoolean(KEY_PLAY_MEDIA, true);
         mCascadeResourceID = sharedPrefs.getInt(KEY_CASCADE, R.id.radio_cascade_win);
+        mProtocolID = sharedPrefs.getInt(KEY_FRSOLUTION, R.id.radio_image);
     }
 
     @Nullable
@@ -66,6 +69,8 @@ public class ServerDialogFragment extends DialogFragment {
         toggle.setChecked(mPlayMedia);
         final RadioGroup cascadeGroup = view.findViewById(R.id.RadioCascade);
         cascadeGroup.check(mCascadeResourceID);
+        final RadioGroup protocolGroup = view.findViewById(R.id.RadioProtocol);
+        protocolGroup.check(mProtocolID);
 
         setCancelable(false);
 
@@ -83,6 +88,8 @@ public class ServerDialogFragment extends DialogFragment {
                                 editor.putString(KEY_SERVER_PALM, palmServer.getText().toString());
                                 editor.putBoolean(KEY_PLAY_MEDIA, toggle.isChecked());
                                 editor.putInt(KEY_CASCADE, cascadeGroup.getCheckedRadioButtonId());
+                                editor.putInt(KEY_FRSOLUTION, protocolGroup.getCheckedRadioButtonId());
+
                                 editor.commit();
 
                                 getTargetFragment().onActivityResult(getTargetRequestCode(), Activity.RESULT_OK, getActivity().getIntent());

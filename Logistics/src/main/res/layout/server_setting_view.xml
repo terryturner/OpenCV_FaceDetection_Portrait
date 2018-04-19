@@ -91,4 +91,26 @@
 
     </RadioGroup>
 
+    <RadioGroup
+        android:id="@+id/RadioProtocol"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/radio_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/radio_protocol_img"
+            android:checked="true" />
+
+        <RadioButton
+            android:id="@+id/radio_lbp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/radio_protocol_lbp"
+            android:checked="false" />
+
+    </RadioGroup>
+
 </LinearLayout>

@@ -9,7 +9,7 @@ import java.io.ByteArrayOutputStream;
  * Created by darwinhu on 2017/12/20.
  */
 
-public class DataPacket {
+public class ImageDataPacket {
 
     private String TAG = "DataPacket";
     //INFO
@@ -35,7 +35,7 @@ public class DataPacket {
     public ByteArrayOutputStream m_baos = null;
     private byte[] m_data = null;
 
-    public DataPacket(){
+    public ImageDataPacket(){
         m_baos = new ByteArrayOutputStream();
     }
 
@@ -44,7 +44,7 @@ public class DataPacket {
      * @param szName
      * @param bmp
      */
-    public DataPacket(String szID, String szName, Bitmap bmp){
+    public ImageDataPacket(String szID, String szName, Bitmap bmp){
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bmp.compress(Bitmap.CompressFormat.PNG, 0, baos);
         byte[] byteArray = baos.toByteArray();
@@ -53,9 +53,9 @@ public class DataPacket {
         String szHEADER = ComposeHeader(szName, szID, sizeImage);
 
         System.arraycopy(szHEADER.getBytes(), 0, m_Header, 0, szHEADER.getBytes().length);
-        Log.d(TAG, "ImageSize: " + String.valueOf(sizeImage) + "HeaderSize: " + szHEADER.getBytes().length);
+        Log.d(TAG, "ImageSize: " + String.valueOf(sizeImage) + " HeaderSize: " + szHEADER.getBytes().length);
 
-        // [DATA] Protocol [HEADER][IMAGE...]
+        // [DATA] GtProtocol [HEADER][IMAGE...]
         int TOTAL = HEADERSIZE + sizeImage;
         m_data = new byte[TOTAL];
         System.arraycopy(m_Header, 0, m_data, 0, HEADERSIZE);
@@ -68,7 +68,7 @@ public class DataPacket {
         return szMSG;
     }
 
-    public byte[] getM_data(){
+    public byte[] getByteArray(){
         return m_data;
     }
 

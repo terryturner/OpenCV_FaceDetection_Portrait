@@ -17,6 +17,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by Terry on 2017/12/26 0026.
@@ -196,8 +197,17 @@ public class Utils {
         return false;
     }
 
-    public static byte [] float2ByteArray (float value)
+    public static byte [] float2ByteArray (float value, ByteOrder order)
     {
-        return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putFloat(value).array();
+        return ByteBuffer.allocate(4).order(order).putFloat(value).array();
+    }
+
+    public static byte [] transFloatList2ByteArray(List<Float> values, ByteOrder order)
+    {
+        ByteBuffer buffer = ByteBuffer.allocate(4 * values.size()).order(order);
+        for (float value : values) {
+            buffer.putFloat(value);
+        }
+        return buffer.array();
     }
 }

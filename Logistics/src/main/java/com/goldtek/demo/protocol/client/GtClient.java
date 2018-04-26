@@ -6,13 +6,13 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.Vector;
+import java.util.List;
 
 /**
  * Created by darwinhu on 2017/12/25.
@@ -64,16 +64,16 @@ public class GtClient implements IClientProtocol {
     private static final String TAG = "CClientConnection";
     private static final int BUFFSIZE = 512;
     private static final int TIMEOUT_CONNECT = 1000;
-    public static final int PORT = 6666;
+    private static final int PORT = 6666;
 
-    private int m_nPort;
-    private String m_szSvrIP;
+    private final int m_nPort;
+    private final String m_szSvrIP;
+    private final GTFaceRecogSol m_ezSolution;
+    private final String m_szCmd;
+    private final String m_szName;
+    private final String m_szID;
 
     private Socket m_socket = null;
-    private GtFRSolution m_ezSolution;
-    private String m_szCmd;
-    private String m_szName;
-    private String m_szID;
     private int    m_izRegNum = 0;
 
     private Handler m_Handler;
@@ -94,8 +94,8 @@ public class GtClient implements IClientProtocol {
      * @param szName Client Name
      * @param szID Client ID
      */
-    public GtClient(Handler handler, int nPort, String szSvrIP, GtFRSolution eType, String szCmd,
-                    String szName, String szID){
+    public GtClient(Handler handler, int nPort, String szSvrIP, GTFaceRecogSol eType, String szCmd,
+                     String szName, String szID){
         this.m_Handler = handler;
         this.m_nPort    = (nPort > 0) ? nPort : PORT;
         this.m_szSvrIP  = szSvrIP;
@@ -116,8 +116,8 @@ public class GtClient implements IClientProtocol {
      * @param szID Client ID
      * @param izRegNum count of registered frame
      */
-    public GtClient(Handler handler, int nPort, String szSvrIP, GtFRSolution eType, String szCmd,
-                    String szName, String szID, int izRegNum) {
+    public GtClient(Handler handler, int nPort, String szSvrIP, GTFaceRecogSol eType, String szCmd,
+                     String szName, String szID, int izRegNum) {
         this(handler, nPort, szSvrIP, eType, szCmd, szName, szID);
         this.m_izRegNum = izRegNum;
     }
@@ -254,16 +254,14 @@ public class GtClient implements IClientProtocol {
     }
 
     public boolean sendImage(String szName, Bitmap bmp) {
-        ImageDataPacket oPacket = new ImageDataPacket(m_szID, szName, bmp);
+        DataPacket oPacket = new DataPacket(m_szID, szName, bmp);
         mSender.Sending(oPacket.getByteArray());
         return true;
     }
 
-    public boolean sendVector(Vector<Float> features) {
-        VectorDataPacket oPacket = new VectorDataPacket(m_szID, String.format("login_%d", System.currentTimeMillis()), features);
-        Log.i(TAG, "vector: " + Arrays.toString(oPacket.getByteArray()));
+    public boolean sendVector(List<Float> features, boolean big_endian) {
+        DataPacket oPacket = new DataPacket(m_szID, String.format("login_%d", System.currentTimeMillis()), features, big_endian);
         mSender.Sending(oPacket.getByteArray());
-
         return true;
     }
 
@@ -359,8 +357,8 @@ public class GtClient implements IClientProtocol {
         msg.setData(b);
         m_Handler.sendMessage(msg);
 
-        if (Common.getTagValue(message, IClientProtocol.XML.INFO).equalsIgnoreCase(m_szCmd)) {
-            if (Common.getTagValue(message, IClientProtocol.XML.RESULT).equalsIgnoreCase(RESULT.SUCCESS))
+        if (Common.getTagValue(message, XML.INFO).equalsIgnoreCase(m_szCmd)) {
+            if (Common.getTagValue(message, XML.RESULT).equalsIgnoreCase(RESULT.SUCCESS))
                 m_bReady = true;
             else
                 m_bReady = false;
@@ -383,8 +381,7 @@ public class GtClient implements IClientProtocol {
     //==============================================================================================
 
     private String ComposeAuth(String szCmd, String szName, String szID, int regNum, int szType, int szSolution){
-        String szInfo = String.format("<GOLDTEK><service>M</service><cmd>%s</cmd><name>%s</name><id>%s</id>" +
-                        "<info><regnum>%d</regnum><type>%d</type><solution>%d</solution></info></GOLDTEK>",
+        String szInfo = String.format(IClientProtocol.PROTOCOL_CONNECT,
                 szCmd, szName, szID, regNum, szType, szSolution);
         return szInfo;
     }

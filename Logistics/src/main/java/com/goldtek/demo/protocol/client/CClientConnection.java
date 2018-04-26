@@ -10,7 +10,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Vector;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -218,13 +218,13 @@ public class CClientConnection extends Thread implements Runnable, IClientProtoc
     }
 
     public boolean sendImage(String szName, Bitmap bmp) {
-        ImageDataPacket oPacket = new ImageDataPacket(m_szID, szName, bmp);
+        DataPacket oPacket = new DataPacket(m_szID, szName, bmp);
         byte[] packet = oPacket.getByteArray();
         boolean isSending = Sending(packet);
         return isSending;
     }
 
-    public boolean sendVector(Vector<Float> features) {
+    public boolean sendVector(List<Float> features, boolean big_endian) {
         return false;
     }
 

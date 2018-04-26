@@ -4,12 +4,10 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 
 import com.goldtek.demo.logistics.face.Utils;
-import com.goldtek.demo.protocol.client.IClientProtocol;
 
-import java.util.Vector;
+import java.util.List;
 
 /**
  * Created by Terry on 2017/12/25 0025.
@@ -88,7 +86,7 @@ public class DummyProtocol implements IClientProtocol {
     }
 
     @Override
-    public boolean sendVector(Vector<Float> features) {
+    public boolean sendVector(List<Float> features, boolean big_endian) {
         m_bProcess = true;
         return false;
     }

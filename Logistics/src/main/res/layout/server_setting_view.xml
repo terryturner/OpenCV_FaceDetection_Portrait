@@ -98,17 +98,31 @@
         android:orientation="horizontal">
 
         <RadioButton
-            android:id="@+id/radio_image"
+            android:id="@+id/radio_pytensor_img"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/radio_protocol_img"
+            android:text="@string/radio_protocol_pytensor_img"
             android:checked="true" />
 
         <RadioButton
-            android:id="@+id/radio_lbp"
+            android:id="@+id/radio_pytensor_fv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/radio_protocol_lbp"
+            android:text="@string/radio_protocol_pytensor_fv"
+            android:checked="false" />
+
+        <RadioButton
+            android:id="@+id/radio_lbph"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/radio_protocol_lbph"
+            android:checked="false" />
+
+        <RadioButton
+            android:id="@+id/radio_lbphist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/radio_protocol_lbphist"
             android:checked="false" />
 
     </RadioGroup>

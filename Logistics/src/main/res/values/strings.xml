@@ -15,8 +15,10 @@
     <string name="radio_cascade_sample">Sample</string>
     <string name="radio_cascade_win">Haar</string>
     <string name="radio_cascade_rockchip">Rockchip</string>
-    <string name="radio_protocol_img">Image</string>
-    <string name="radio_protocol_lbp">LBP</string>
+    <string name="radio_protocol_pytensor_img">TensorImg</string>
+    <string name="radio_protocol_pytensor_fv">TensorFV</string>
+    <string name="radio_protocol_lbph">LBPH</string>
+    <string name="radio_protocol_lbphist">LBPHIST</string>
 
 
     <!-- Toast Messages -->

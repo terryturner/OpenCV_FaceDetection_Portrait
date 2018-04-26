@@ -5,9 +5,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -26,11 +24,7 @@ import com.goldtek.demo.logistics.face.R;
  */
 
 public class ServerDialogFragment extends DialogFragment {
-    public final static String KEY_SERVER_RECOGNIZE = "recognize-server-address";
-    public final static String KEY_SERVER_PALM = "palm-server-address";
-    public final static String KEY_PLAY_MEDIA = "demo-play-media";
-    public final static String KEY_CASCADE = "cascade_file";
-    public final static String KEY_FRSOLUTION = "fr_solution";
+    private GTSharedPreferences mPreferences;
     private String mRecognizeAddr;
     private String mPalmAddr;
     private int mCascadeResourceID;
@@ -40,14 +34,13 @@ public class ServerDialogFragment extends DialogFragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        mPreferences = new GTSharedPreferences(getContext());
 
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-
-        mRecognizeAddr = sharedPrefs.getString(KEY_SERVER_RECOGNIZE, "127.0.0.1");
-        mPalmAddr = sharedPrefs.getString(KEY_SERVER_PALM, "127.0.0.1");
-        mPlayMedia = sharedPrefs.getBoolean(KEY_PLAY_MEDIA, true);
-        mCascadeResourceID = sharedPrefs.getInt(KEY_CASCADE, R.id.radio_cascade_win);
-        mProtocolID = sharedPrefs.getInt(KEY_FRSOLUTION, R.id.radio_image);
+        mRecognizeAddr = mPreferences.getRecognizeServerAddr();
+        mPalmAddr = mPreferences.getPalmServerAddr();
+        mPlayMedia = mPreferences.getPlayMainMedia();
+        mCascadeResourceID = mPreferences.getCascadeUIResource();
+        mProtocolID = mPreferences.getRecognizeProtocolID();
     }
 
     @Nullable
@@ -81,16 +74,13 @@ public class ServerDialogFragment extends DialogFragment {
                 .setPositiveButton(R.string.btn_ok,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
-                                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-
-                                SharedPreferences.Editor editor = sharedPrefs.edit();
-                                editor.putString(KEY_SERVER_RECOGNIZE, recognizeServer.getText().toString());
-                                editor.putString(KEY_SERVER_PALM, palmServer.getText().toString());
-                                editor.putBoolean(KEY_PLAY_MEDIA, toggle.isChecked());
-                                editor.putInt(KEY_CASCADE, cascadeGroup.getCheckedRadioButtonId());
-                                editor.putInt(KEY_FRSOLUTION, protocolGroup.getCheckedRadioButtonId());
-
-                                editor.commit();
+                                mPreferences.setOfServerDiaglog(
+                                        recognizeServer.getText().toString(),
+                                        palmServer.getText().toString(),
+                                        toggle.isChecked(),
+                                        cascadeGroup.getCheckedRadioButtonId(),
+                                        protocolGroup.getCheckedRadioButtonId()
+                                );
 
                                 getTargetFragment().onActivityResult(getTargetRequestCode(), Activity.RESULT_OK, getActivity().getIntent());
                             }

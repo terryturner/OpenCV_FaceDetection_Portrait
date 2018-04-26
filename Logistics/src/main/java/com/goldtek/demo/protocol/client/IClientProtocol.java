@@ -2,13 +2,32 @@ package com.goldtek.demo.protocol.client;
 
 import android.graphics.Bitmap;
 
-import java.util.Vector;
+import java.util.List;
 
 /**
  * Created by Terry on 2018/1/3 0003.
  */
 
 public interface IClientProtocol {
+    String PROTOCOL_CONNECT =
+            "<GOLDTEK>" +
+                "<service>M</service>" +
+                "<cmd>%s</cmd>" +
+                "<name>%s</name>" +
+                "<id>%s</id>" +
+                "<info>" +
+                    "<regnum>%d</regnum>" +
+                    "<type>%d</type>" +
+                    "<solution>%d</solution>" +
+                "</info>" +
+            "</GOLDTEK>";
+    String PROTOCOL_SENDHEADER =
+            "<GOLDTEK>" +
+                    "<size>%s</size>" +
+                    "<id>%s</id>" +
+                    "<name>%s</name>" +
+            "</GOLDTEK>";
+
     class CMDTYPE {
         public static final String REG = "REGISTER";
         public static final String REG_DONE = "REGISTER_DONE";
@@ -45,7 +64,7 @@ public interface IClientProtocol {
     void start();
     void onStop();
     boolean sendImage(String szName, Bitmap bmp);
-    boolean sendVector(Vector<Float> features);
+    boolean sendVector(List<Float> features, boolean big_endian);
     boolean isReady();
     boolean isProcessing();
 

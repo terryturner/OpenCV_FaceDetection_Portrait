@@ -26,6 +26,7 @@ import android.widget.Toast;
 
 import com.goldtek.demo.logistics.face.dialog.AboutDialogFragment;
 import com.goldtek.demo.logistics.face.dialog.FancyAlert;
+import com.goldtek.demo.logistics.face.dialog.GTSharedPreferences;
 import com.goldtek.demo.logistics.face.dialog.ProfileDialogFragment;
 import com.goldtek.demo.logistics.face.dialog.ServerDialogFragment;
 import com.goldtek.demo.logistics.face.dialog.UsageWarning;
@@ -65,7 +66,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
     private SurfaceHolder mSurfaceHolder;
     private MediaPlayer mMediaPlayer;
     private int mMediaCurrentPos;
-
+    private GTSharedPreferences mPreferences;
 
 
     @Override
@@ -78,6 +79,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
             mArgument = bundle.getString(ARGUMENT);
 
         setHasOptionsMenu(true);
+        mPreferences = new GTSharedPreferences(getContext());
     }
 
     @Override
@@ -124,8 +126,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(MainFragment.this);
 
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        m_bPlayMedia = sharedPrefs.getBoolean(ServerDialogFragment.KEY_PLAY_MEDIA, true);
+        m_bPlayMedia = mPreferences.getPlayMainMedia();
         playMedia(view);
 
         return view;
@@ -154,8 +155,7 @@ public class MainFragment extends Fragment implements SurfaceHolder.Callback, Me
                 fadeButton(true);
                 break;
             case REQUEST_SETTING:
-                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                m_bPlayMedia = sharedPrefs.getBoolean(ServerDialogFragment.KEY_PLAY_MEDIA, true);
+                m_bPlayMedia = mPreferences.getPlayMainMedia();
 
                 if (m_bPlayMedia) resumeMediaPlayer();
                 else pauseMediaPlayer();

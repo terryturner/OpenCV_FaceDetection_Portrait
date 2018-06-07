@@ -3,6 +3,7 @@ package com.goldtek.demo.logistics.face;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -29,21 +30,11 @@ import java.io.InputStream;
 /**
  * Created by Terry on 2018/4/26 0026.
  */
-public class FaceRecogActivity extends Activity {
+public abstract class FaceRecogActivity extends Activity {
     private static final String    TAG                 = "FaceRecogActivity";
 
     protected static final Scalar FACE_RECT_COLOR     = new Scalar(0, 255, 0, 255);
     protected static final boolean   FLAG_DEBUG          = false;
-
-    protected static final int       PROTOCOL_CREATE     = 0x200;
-    protected static final int       PROTOCOL_RELEASE     = 0x201;
-
-    protected static final int       SET_PROGRESS_VISIBLE     = 0x110;
-    protected static final int       SET_PROGRESS_INVISIBLE   = 0x111;
-
-    protected static final int       SET_SENDING_PROGRESS_VISIBLE = 0x110;
-    protected static final int       SET_SENDING_PROGRESS_INVISIBLE = 0x111;
-    protected static final int       SET_LEARNING_PROGRESS_VISIBLE = 0x112;
 
     protected static final int        JAVA_DETECTOR       = 0;
     protected static final int        NATIVE_DETECTOR     = 1;
@@ -122,8 +113,8 @@ public class FaceRecogActivity extends Activity {
 
                     mOpenCvCameraView.enableView();
 
-                    mHandler.sendEmptyMessage(PROTOCOL_RELEASE);
-                    mHandler.sendEmptyMessage(PROTOCOL_CREATE);
+                    mHandler.sendEmptyMessage(GTMessage.PROTOCOL_RELEASE);
+                    mHandler.sendEmptyMessage(GTMessage.PROTOCOL_CREATE);
                 } break;
                 default:
                 {
@@ -148,14 +139,17 @@ public class FaceRecogActivity extends Activity {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         mPreferences = new GTSharedPreferences(this);
-        mTensor = new TensorFlow(this);
+
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mTensor = new TensorFlow(this, mHandler);
+        }
     }
 
     @Override
     public void onPause()
     {
         super.onPause();
-        mHandler.sendEmptyMessage(PROTOCOL_RELEASE);
+        mHandler.sendEmptyMessage(GTMessage.PROTOCOL_RELEASE);
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
     }
@@ -165,6 +159,7 @@ public class FaceRecogActivity extends Activity {
         super.onDestroy();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+        if (mTensor != null) mTensor.stop();
     }
 
     @Override
@@ -196,5 +191,14 @@ public class FaceRecogActivity extends Activity {
 
     protected void setHandler(Handler h) {
         mHandler = h;
+    }
+
+    public abstract void CreateNew();
+
+    public void Release(){
+        if (mProtocol != null) {
+            mProtocol.onStop();
+            mProtocol = null;
+        }
     }
 }

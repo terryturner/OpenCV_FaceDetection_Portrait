@@ -24,12 +24,14 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
+import org.opencv.core.CvException;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
 import org.opencv.imgproc.Imgproc;
 
 import java.lang.ref.WeakReference;
+import java.util.List;
 import java.util.Vector;
 
 public class RegisterActivity extends FaceRecogActivity implements CvCameraViewListener2 {
@@ -58,20 +60,23 @@ public class RegisterActivity extends FaceRecogActivity implements CvCameraViewL
         public void handleMessage(Message msg) {
             RegisterActivity activity = mActivity.get();
             switch (msg.what) {
-                case PROTOCOL_CREATE:
+                case GTMessage.PROTOCOL_CREATE:
                     activity.CreateNew();
                     break;
-                case PROTOCOL_RELEASE:
+                case GTMessage.PROTOCOL_RELEASE:
                     activity.Release();
                     break;
-                case SET_SENDING_PROGRESS_VISIBLE:
+                case GTMessage.SET_SENDING_PROGRESS_VISIBLE:
                     activity.setProgress(true, false);
                     break;
-                case SET_SENDING_PROGRESS_INVISIBLE:
+                case GTMessage.SET_SENDING_PROGRESS_INVISIBLE:
                     activity.setProgress(false, false);
                     break;
-                case SET_LEARNING_PROGRESS_VISIBLE:
+                case GTMessage.SET_LEARNING_PROGRESS_VISIBLE:
                     activity.setProgress(false, true);
+                    break;
+                case GTMessage.MSG_PROCESSED_TF_FV:
+                    activity.sendVector((List<Float>) msg.obj);
                     break;
                 default:
                     String szMsgType = msg.getData().getString(IClientProtocol.Hndl_MSGTYPE, "");
@@ -107,10 +112,7 @@ public class RegisterActivity extends FaceRecogActivity implements CvCameraViewL
     }
 
     public RegisterActivity() {
-        mDetectorName = new String[2];
-        mDetectorName[JAVA_DETECTOR] = "Java";
-        mDetectorName[NATIVE_DETECTOR] = "Native (tracking)";
-
+        super();
         Log.i(TAG, "Instantiated new " + this.getClass());
         setHandler(new MainHandler(this));
     }
@@ -195,55 +197,62 @@ public class RegisterActivity extends FaceRecogActivity implements CvCameraViewL
                 }
 
                 if (isExistFace) {
+                    Utils.matToBitmap(tempMat, mCacheBitmap);
                     Core.flip(tempMat, tempMat, 1);
+
                     Rect resizeRect = new Rect(facesArray[0].x - 100, facesArray[0].y - 50, facesArray[0].width + 150, facesArray[0].height + 150);
-                    Mat cropped = new Mat(tempMat, resizeRect);
+                    Mat cropped = null;
+                    try {
+                        cropped = new Mat(tempMat, resizeRect);
+                    } catch (CvException e) {
+                        e.printStackTrace();
+                    }
+
 //                    AsyncSaveBmpTask task = new AsyncSaveBmpTask(cropped);
 //                    task.execute(new Rect());
 
-                    switch (mSolution) {
-                        case PyTensor:
-                        case LBPH:
-                            Bitmap resized = Bitmap.createBitmap(cropped.width(), cropped.height(), Bitmap.Config.ARGB_8888);
-                            Utils.matToBitmap(cropped, resized);
+                    if (cropped != null) {
+                        switch (mSolution) {
+                            case PyTensor:
+                            case LBPH:
+                                Bitmap resized = Bitmap.createBitmap(cropped.width(), cropped.height(), Bitmap.Config.ARGB_8888);
 
-                            if (mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing() && !mProtocol.sendImage(String.format("login_%d", System.currentTimeMillis()), resized)) {
-                                Release();
-                                // TODO: error happened! tip some msg for user
-                                finish();
-                            }
-                            resized.recycle();
+                                Utils.matToBitmap(cropped, resized);
 
-                            break;
-                        case PyTensorFV:
-                            if (mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing() && !mProtocol.sendVector(mTensor.getFeatureList(cropped), true)) {
-                                Release();
-                                // TODO: error happened!
-                            }
-                            break;
-                        case LBPHIST:
-                            Mat output = new Mat();
-                            //TODO: try catch
-                            mNativeDetector.getVecOfLBPHIST(cropped, output);
-                            if (output != null && output.size().width == 4096 && output.size().height == 1) {
-                                //Log.i(TAG, "mat: " + output.dump());
-                                Vector<Float> features = new Vector<>();
-                                for (int i = 0; i < 4096; i++) features.add((float) output.get(0, i)[0]);
-                                if (mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing() && !mProtocol.sendVector(features, false)) {
-                                    //Log.i(TAG, "vec: " + features.toString());
+                                if (mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing() && !mProtocol.sendImage(String.format("login_%d", System.currentTimeMillis()), resized)) {
                                     Release();
-                                    // TODO: error happened!
+                                    // TODO: error happened! tip some msg for user
+                                    finish();
                                 }
-                            } else {
-                                Log.i(TAG, "no face");
-                            }
-                            break;
+                                resized.recycle();
+
+                                break;
+                            case PyTensorFV:
+                                mTensor.getFeatureList(cropped);
+                                break;
+                            case LBPHIST:
+                                Mat output = new Mat();
+                                //TODO: try catch
+                                mNativeDetector.getVecOfLBPHIST(cropped, output);
+                                if (output != null && output.size().width == 4096 && output.size().height == 1) {
+                                    //Log.i(TAG, "mat: " + output.dump());
+                                    Vector<Float> features = new Vector<>();
+                                    for (int i = 0; i < 4096; i++) features.add((float) output.get(0, i)[0]);
+                                    if (mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing() && !mProtocol.sendVector(features, false)) {
+                                        //Log.i(TAG, "vec: " + features.toString());
+                                        Release();
+                                        // TODO: error happened!
+                                    }
+                                } else {
+                                    Log.i(TAG, "no face");
+                                }
+                                break;
+                        }
+                        cropped.release();
                     }
 
-
-                    cropped.release();
                     tempMat.release();
-                    mHandler.sendEmptyMessage(SET_SENDING_PROGRESS_VISIBLE);
+                    mHandler.sendEmptyMessage(GTMessage.SET_SENDING_PROGRESS_VISIBLE);
                 }
 
             }
@@ -257,6 +266,13 @@ public class RegisterActivity extends FaceRecogActivity implements CvCameraViewL
         return mRgba;
     }
 
+    private void sendVector(List<Float> vector) {
+        if(mProtocol != null && mProtocol.isReady() && !mProtocol.isProcessing() &&
+                mTensor != null && !mProtocol.sendVector(vector, true)) {
+            Release();
+            // TODO: error happened!
+        }
+    }
 
     private void setProgress(boolean sending, boolean learning) {
         mSendingProgressBar.setVisibility(sending ? View.VISIBLE : View.INVISIBLE);
@@ -270,7 +286,8 @@ public class RegisterActivity extends FaceRecogActivity implements CvCameraViewL
             setResult(Activity.RESULT_CANCELED, returnIntent);
             finish();
         } else {
-            if (mCacheBitmap != null && !mCacheBitmap.isRecycled()) ((ImageView)findViewById(R.id.registerPhoto)).setImageBitmap(mCacheBitmap);
+            if (mCacheBitmap != null && !mCacheBitmap.isRecycled())
+                ((ImageView)findViewById(R.id.registerPhoto)).setImageBitmap(mCacheBitmap);
             mSendFrame++;
 
             switch (mSendFrame % 11) {
@@ -308,13 +325,13 @@ public class RegisterActivity extends FaceRecogActivity implements CvCameraViewL
 
             if (mSendFrame < REGISTER_LIMIT) {
                 Log.i(TAG, "send done " + mSendFrame);
-                mHandler.sendEmptyMessage(SET_SENDING_PROGRESS_INVISIBLE);
+                mHandler.sendEmptyMessage(GTMessage.SET_SENDING_PROGRESS_INVISIBLE);
             }
             else {
                 Log.i(TAG, "start learn " + mSendFrame);
-                mHandler.removeMessages(SET_SENDING_PROGRESS_VISIBLE);
-                mHandler.removeMessages(SET_SENDING_PROGRESS_INVISIBLE);
-                mHandler.sendEmptyMessage(SET_LEARNING_PROGRESS_VISIBLE);
+                mHandler.removeMessages(GTMessage.SET_SENDING_PROGRESS_VISIBLE);
+                mHandler.removeMessages(GTMessage.SET_SENDING_PROGRESS_INVISIBLE);
+                mHandler.sendEmptyMessage(GTMessage.SET_LEARNING_PROGRESS_VISIBLE);
             }
         }
 
@@ -327,13 +344,6 @@ public class RegisterActivity extends FaceRecogActivity implements CvCameraViewL
                     mHandler, -1, mServerAddr, mSolution,
                     IClientProtocol.CMDTYPE.REG, mRegisterName, mRegisterID, REGISTER_LIMIT);
             mProtocol.start();
-        }
-    }
-
-    public void Release(){
-        if (mProtocol != null) {
-            mProtocol.onStop();
-            mProtocol = null;
         }
     }
 
